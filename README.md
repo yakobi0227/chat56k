@@ -23,6 +23,10 @@ Serves the UI and WebSocket on the same port (`PORT`, default 3999).
 
 ## Deploy
 
+Repo: https://github.com/yakobi0227/chat99
+
 This is a long-running Node process (live rooms). Hosts that only do static/serverless (Vercel, Netlify) will not keep chat99 up.
 
-Render: connect this repo. `render.yaml` is the blueprint.
+One-click Render (WebSockets work there):
+
+https://render.com/deploy?repo=https://github.com/yakobi0227/chat99
