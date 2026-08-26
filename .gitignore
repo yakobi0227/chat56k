@@ -1,0 +1,8 @@
+node_modules
+dist
+client/dist
+.DS_Store
+*.log
+.vite
+server/data.json
+server/data.json.tmp

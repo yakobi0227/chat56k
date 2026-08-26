@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: chat99
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm ci --prefix client && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
