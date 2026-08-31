@@ -33,7 +33,7 @@ Do **not** pick Docker or Static Site. chat99 is a **Node web service**.
 4. Set these fields:
 
    - **Language:** Node
-   - **Build command:** `npm ci --omit=dev && npm ci --prefix client && npm run build --prefix client`
+   - **Build command:** `npm run render-build`
    - **Start command:** `node server/index.js`
    - **Instance type:** Free
    - **Health check path:** `/health`
