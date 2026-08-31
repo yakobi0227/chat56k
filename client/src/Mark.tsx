@@ -16,12 +16,12 @@ export default function Mark({ size = 48 }: { size?: number }) {
         textAnchor="middle"
         fill="#ff7a18"
         fontFamily="Tahoma, sans-serif"
-        fontSize="16"
+        fontSize="11"
         fontWeight="700"
       >
-        99
+        56k
       </text>
-      <rect x="31" y="20" width="5" height="7" fill="#ff7a18" />
+      <rect x="33" y="20" width="4" height="6" fill="#ff7a18" />
       <rect x="8" y="40" width="32" height="5" fill="#6a6358" />
       <rect x="20" y="39" width="8" height="3" fill="#2a2622" />
     </svg>

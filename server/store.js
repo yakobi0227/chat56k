@@ -20,7 +20,7 @@ export function emptyData() {
     rooms: HOUSE_ROOMS.map((r) => ({
       ...r,
       house: true,
-      createdBy: "chat99",
+      createdBy: "chat56k",
       bans: [],
     })),
     reports: [],
@@ -39,7 +39,7 @@ export function loadStore() {
   if (!Array.isArray(data.reports)) data.reports = [];
   for (const house of HOUSE_ROOMS) {
     if (!data.rooms.some((r) => r.id === house.id)) {
-      data.rooms.unshift({ ...house, house: true, createdBy: "chat99", bans: [] });
+      data.rooms.unshift({ ...house, house: true, createdBy: "chat56k", bans: [] });
     }
   }
   for (const room of data.rooms) {

@@ -24,7 +24,7 @@ export function servePublic(req, res) {
     return;
   }
 
-  const url = new URL(req.url || "/", "http://chat99.local");
+  const url = new URL(req.url || "/", "http://chat56k.local");
   if (url.pathname === "/health") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("ok\n");
@@ -33,7 +33,7 @@ export function servePublic(req, res) {
 
   if (!existsSync(DIST)) {
     res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("chat99 — run npm run build, then npm start\n");
+    res.end("chat56k — run npm run build, then npm start\n");
     return;
   }
 

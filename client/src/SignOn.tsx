@@ -34,7 +34,7 @@ export default function SignOn({
 
   return (
     <Win98Window
-      title="chat99 — Sign On"
+      title="chat56k — Sign On"
       x={x}
       y={y}
       w={430}
@@ -47,8 +47,8 @@ export default function SignOn({
         <div className="signon-hero">
           <Mark />
           <div>
-            <h1>chat99</h1>
-            <p>Rooms of 23. A directory. A private chat. That’s the whole trick.</p>
+            <h1>chat56k</h1>
+            <p>Dial-up rooms. 23 seats. No feed. That’s the whole trick.</p>
           </div>
         </div>
         <div className="tabs">
@@ -130,7 +130,7 @@ export default function SignOn({
                     <path d="M3 8.5 L6.5 12 L13 4" fill="none" stroke="#000" strokeWidth="2" />
                   )}
                 </svg>
-                <span>I am 18 years of age or older. chat99 is not for minors.</span>
+                <span>I am 18 years of age or older. chat56k is not for minors.</span>
               </div>
             </>
           )}

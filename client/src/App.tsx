@@ -95,18 +95,19 @@ export default function App() {
       wsRef.current = ws;
       ws.onopen = () => {
         setConnected(true);
-        const token = localStorage.getItem("chat99.token");
+        const token = localStorage.getItem("chat56k.token") || localStorage.getItem("chat99.token");
         if (token) ws?.send(JSON.stringify({ type: "resume", token }));
       };
       ws.onclose = () => {
         setConnected(false);
         if (!stopped) retry = setTimeout(connect, 1200);
       };
-      ws.onerror = () => setError("Could not reach the chat99 server.");
+      ws.onerror = () => setError("Could not reach the chat56k server.");
       ws.onmessage = (ev) => {
         const msg = JSON.parse(String(ev.data)) as ClientEvent;
         if (msg.type === "error") {
           if (msg.code === "BAD_TOKEN") {
+            localStorage.removeItem("chat56k.token");
             localStorage.removeItem("chat99.token");
             setScreenName(null);
             setRoom(null);
@@ -117,7 +118,8 @@ export default function App() {
           return;
         }
       if (msg.type === "signed_on") {
-        localStorage.setItem("chat99.token", msg.token);
+        localStorage.setItem("chat56k.token", msg.token);
+        localStorage.removeItem("chat99.token");
         setError("");
         setScreenName(msg.screenName);
         setRooms(msg.rooms);
@@ -130,7 +132,7 @@ export default function App() {
           setSelectedRoomId(msg.rooms[0]?.id ?? null);
           setFocus("dir");
         }
-        document.title = `chat99 — ${msg.screenName}`;
+        document.title = `chat56k — ${msg.screenName}`;
         return;
       }
       if (msg.type === "rooms") {
@@ -143,7 +145,7 @@ export default function App() {
         setSelectedMember(null);
         setFocus("room");
         setRoomPos((p) => ({ ...p, z: ++zCounter }));
-        document.title = `${msg.room.name} — chat99`;
+        document.title = `${msg.room.name} — chat56k`;
         return;
       }
       if (msg.type === "room_event") {
@@ -226,7 +228,7 @@ export default function App() {
   return (
     <div className="desktop">
       <div className="desktop-mark">
-        <div className="word">chat99</div>
+        <div className="word">chat56k</div>
         <div className="tag">23 to a room · no feed · no algorithm</div>
       </div>
 
@@ -388,7 +390,7 @@ export default function App() {
         <div className="notice-modal">
           <div className="window" style={{ width: 320 }}>
             <div className="title-bar">
-              <div className="title-bar-text">chat99</div>
+              <div className="title-bar-text">chat56k</div>
             </div>
             <div className="window-body pad">
               <p className="hint" style={{ marginBottom: 12 }}>

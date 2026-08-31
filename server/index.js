@@ -59,7 +59,7 @@ wss.on("connection", (ws) => {
     }
     handle(ws, msg).catch((err) => {
       console.error(err);
-      send(ws, { type: "error", code: "SERVER", message: "chat99 hit a snag. Try again." });
+      send(ws, { type: "error", code: "SERVER", message: "chat56k hit a snag. Try again." });
     });
   });
   ws.on("close", () => disconnect(ws));
@@ -146,7 +146,7 @@ async function createAccount(ws, msg) {
     send(ws, {
       type: "error",
       code: "AGE",
-      message: "You must confirm you are 18 or older to use chat99.",
+      message: "You must confirm you are 18 or older to use chat56k.",
     });
     return;
   }
@@ -854,5 +854,5 @@ function send(ws, payload) {
 }
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`chat99 listening on 0.0.0.0:${PORT}`);
+  console.log(`chat56k listening on 0.0.0.0:${PORT}`);
 });

@@ -1,6 +1,8 @@
-# chat99
+# chat56k
 
-23-seat rooms. A directory. Private chat. A BF List. No email, no feed, no algorithm.
+Dial-up rooms. 23 seats. Private chat. A BF List. No email, no feed, no algorithm.
+
+Live: https://chat56k.com
 
 ## Local
 
@@ -19,26 +21,19 @@ npm run build
 npm start
 ```
 
-Serves the UI and WebSocket on the same port (`PORT`, default 3999).
+## Custom domain (chat56k.com)
 
-## Deploy on Render
+1. Render → chat56k web service → **Settings → Custom Domains**.
+2. Add `chat56k.com` and `www.chat56k.com`.
+3. Copy the service hostname (`something.onrender.com`).
+4. At the registrar for chat56k.com, add DNS:
 
-Repo: https://github.com/yakobi0227/chat99
+   | Type | Host | Value |
+   |---|---|---|
+   | CNAME | `www` | `something.onrender.com` |
+   | CNAME or ALIAS | `@` | `something.onrender.com` |
 
-Do **not** pick Docker or Static Site. chat99 is a **Node web service**.
+   If root CNAME is not allowed, use the **A record** Render shows instead.  
+   Cloudflare: DNS only (grey cloud), SSL **Full**.
 
-1. Open [Render Dashboard](https://dashboard.render.com/) and sign in with GitHub.
-2. **New** → **Web Service** (not Blueprint, not Static Site, not Docker).
-3. Connect **yakobi0227/chat99**, branch **main**.
-4. Set these fields:
-
-   - **Language:** Node
-   - **Build command:** `npm run render-build`
-   - **Start command:** `node server/index.js`
-   - **Instance type:** Free
-   - **Health check path:** `/health`
-
-5. Create Web Service and wait for the first deploy (a few minutes).
-6. Open the `*.onrender.com` URL.
-
-If an old failed service exists, delete it first, then create a new Web Service with the settings above.
+5. Wait for Render to show the domain **Verified** (HTTPS is automatic).

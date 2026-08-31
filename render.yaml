@@ -8,6 +8,9 @@ services:
     buildCommand: npm run render-build
     startCommand: node server/index.js
     healthCheckPath: /health
+    domains:
+      - chat56k.com
+      - www.chat56k.com
     envVars:
       - key: NODE_ENV
         value: production

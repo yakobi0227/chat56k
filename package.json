@@ -1,9 +1,9 @@
 {
-  "name": "chat99",
+  "name": "chat56k",
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "chat99 — 23-seat rooms, directory, private chat, BF List. No email, no feed, no algorithm.",
+  "description": "chat56k — 23-seat rooms, directory, private chat, BF List. No email, no feed, no algorithm.",
   "scripts": {
     "dev": "concurrently -n server,client -c yellow,cyan \"npm run server\" \"npm run client\"",
     "server": "node server/index.js",
