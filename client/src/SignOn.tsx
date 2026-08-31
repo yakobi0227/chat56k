@@ -111,20 +111,27 @@ export default function SignOn({
               <p className="hint">
                 3–16 characters. Start with a letter. Letters and numbers only. No email.
               </p>
-              <button
-                type="button"
-                className={`age-gate ${attest18 ? "on" : ""}`}
+              <div
+                className="age-line"
+                role="checkbox"
+                aria-checked={attest18}
+                tabIndex={0}
                 onClick={() => setAttest18((v) => !v)}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setAttest18((v) => !v);
+                  }
+                }}
               >
-                <span className="age-box" aria-hidden="true">
-                  {attest18 ? "X" : ""}
-                </span>
-                <span className="age-copy">
-                  <strong>Click this box</strong> if you are 18 or older.
-                  <br />
-                  chat99 is not for minors. Required to create a screen name.
-                </span>
-              </button>
+                <svg className="age-box" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                  <rect x="0.5" y="0.5" width="15" height="15" fill="#fff" stroke="#000" />
+                  {attest18 && (
+                    <path d="M3 8.5 L6.5 12 L13 4" fill="none" stroke="#000" strokeWidth="2" />
+                  )}
+                </svg>
+                <span>I am 18 years of age or older. chat99 is not for minors.</span>
+              </div>
             </>
           )}
           <div className="error-line">{error}</div>
