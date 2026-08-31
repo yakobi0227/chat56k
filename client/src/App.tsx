@@ -250,6 +250,7 @@ export default function App() {
             setError("");
             send({ type: "create_account", screenName: name, password, attest18 });
           }}
+          onClearError={() => setError("")}
         />
       )}
 

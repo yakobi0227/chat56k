@@ -92,14 +92,15 @@ export default function BfList({
           />
           <button type="submit">Add</button>
         </form>
-        <label className="check">
+        <div className="field-row age-row">
           <input
+            id="away"
             type="checkbox"
             checked={away}
             onChange={(e) => onAway(e.target.checked, awayMessage)}
           />
-          Away
-        </label>
+          <label htmlFor="away">Away</label>
+        </div>
         <input
           className="away-msg"
           placeholder="Away message"

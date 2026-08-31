@@ -182,6 +182,11 @@ textarea {
   margin: 8px 0;
 }
 
+.age-row {
+  margin: 10px 0 6px;
+  font-size: 12px;
+}
+
 .signon-actions {
   display: flex;
   justify-content: flex-end;
