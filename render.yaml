@@ -3,8 +3,10 @@ services:
     name: chat99
     runtime: node
     plan: free
-    buildCommand: npm ci && npm ci --prefix client && npm run build
-    startCommand: npm start
+    region: oregon
+    branch: main
+    buildCommand: npm ci --omit=dev && npm ci --prefix client && npm run build --prefix client
+    startCommand: node server/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

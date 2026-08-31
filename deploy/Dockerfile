@@ -7,4 +7,4 @@ COPY . .
 RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 3999
-CMD ["npm", "start"]
+CMD ["node", "server/index.js"]

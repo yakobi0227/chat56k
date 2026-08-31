@@ -21,12 +21,24 @@ npm start
 
 Serves the UI and WebSocket on the same port (`PORT`, default 3999).
 
-## Deploy
+## Deploy on Render
 
 Repo: https://github.com/yakobi0227/chat99
 
-This is a long-running Node process (live rooms). Hosts that only do static/serverless (Vercel, Netlify) will not keep chat99 up.
+Do **not** pick Docker or Static Site. chat99 is a **Node web service**.
 
-One-click Render (WebSockets work there):
+1. Open [Render Dashboard](https://dashboard.render.com/) and sign in with GitHub.
+2. **New** → **Web Service** (not Blueprint, not Static Site, not Docker).
+3. Connect **yakobi0227/chat99**, branch **main**.
+4. Set these fields:
 
-https://render.com/deploy?repo=https://github.com/yakobi0227/chat99
+   - **Language:** Node
+   - **Build command:** `npm ci --omit=dev && npm ci --prefix client && npm run build --prefix client`
+   - **Start command:** `node server/index.js`
+   - **Instance type:** Free
+   - **Health check path:** `/health`
+
+5. Create Web Service and wait for the first deploy (a few minutes).
+6. Open the `*.onrender.com` URL.
+
+If an old failed service exists, delete it first, then create a new Web Service with the settings above.

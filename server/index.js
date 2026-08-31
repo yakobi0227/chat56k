@@ -854,5 +854,5 @@ function send(ws, payload) {
 }
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`chat99 server on :${PORT}`);
+  console.log(`chat99 listening on 0.0.0.0:${PORT}`);
 });
