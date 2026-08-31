@@ -38,7 +38,7 @@ export default function SignOn({
       x={x}
       y={y}
       w={430}
-      h={mode === "new" ? 420 : 330}
+      h={mode === "new" ? 460 : 330}
       z={z}
       onFocus={onFocus}
       onMove={onMove}
@@ -111,15 +111,20 @@ export default function SignOn({
               <p className="hint">
                 3–16 characters. Start with a letter. Letters and numbers only. No email.
               </p>
-              <div className="field-row age-row">
-                <input
-                  id="age18"
-                  type="checkbox"
-                  checked={attest18}
-                  onChange={(e) => setAttest18(e.target.checked)}
-                />
-                <label htmlFor="age18">I am 18 years of age or older. chat99 is not for minors.</label>
-              </div>
+              <button
+                type="button"
+                className={`age-gate ${attest18 ? "on" : ""}`}
+                onClick={() => setAttest18((v) => !v)}
+              >
+                <span className="age-box" aria-hidden="true">
+                  {attest18 ? "X" : ""}
+                </span>
+                <span className="age-copy">
+                  <strong>Click this box</strong> if you are 18 or older.
+                  <br />
+                  chat99 is not for minors. Required to create a screen name.
+                </span>
+              </button>
             </>
           )}
           <div className="error-line">{error}</div>
