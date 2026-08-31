@@ -1,5 +1,18 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
+const TITLE = 28;
+const DOCK = 28;
+const GRIP = 100;
+
+function clamp(x: number, y: number, w: number) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - DOCK;
+  return {
+    x: Math.min(Math.max(x, GRIP - w), vw - GRIP),
+    y: Math.min(Math.max(y, 0), Math.max(0, vh - TITLE)),
+  };
+}
+
 type Props = {
   title: string;
   x: number;
@@ -32,9 +45,20 @@ export default function Win98Window({
   const drag = useRef<{ dx: number; dy: number } | null>(null);
 
   useEffect(() => {
+    const keepIn = () => {
+      const next = clamp(x, y, w);
+      if (next.x !== x || next.y !== y) onMove(next.x, next.y);
+    };
+    keepIn();
+    window.addEventListener("resize", keepIn);
+    return () => window.removeEventListener("resize", keepIn);
+  }, [x, y, w, onMove]);
+
+  useEffect(() => {
     const move = (e: PointerEvent) => {
       if (!drag.current) return;
-      onMove(e.clientX - drag.current.dx, e.clientY - drag.current.dy);
+      const next = clamp(e.clientX - drag.current.dx, e.clientY - drag.current.dy, w);
+      onMove(next.x, next.y);
     };
     const up = () => {
       drag.current = null;
@@ -45,7 +69,7 @@ export default function Win98Window({
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };
-  }, [onMove]);
+  }, [onMove, w]);
 
   return (
     <div
