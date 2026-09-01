@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useDock } from "./Dock";
 
 const TITLE = 28;
 const DOCK = 28;
@@ -43,6 +44,22 @@ export default function Win98Window({
   children,
 }: Props) {
   const drag = useRef<{ dx: number; dy: number } | null>(null);
+  const id = useId();
+  const dock = useDock();
+  const [min, setMin] = useState(false);
+
+  useEffect(() => {
+    if (!dock) return;
+    if (!min) {
+      dock.unregister(id);
+      return;
+    }
+    dock.register(id, title, () => {
+      setMin(false);
+      onFocus();
+    });
+    return () => dock.unregister(id);
+  }, [min, title, id, dock, onFocus]);
 
   useEffect(() => {
     const keepIn = () => {
@@ -74,7 +91,14 @@ export default function Win98Window({
   return (
     <div
       className={`window-shell ${className ?? ""}`}
-      style={{ left: x, top: y, width: w, height: h, zIndex: z }}
+      style={{
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+        zIndex: z,
+        display: min ? "none" : undefined,
+      }}
       onPointerDown={onFocus}
     >
       <div className="window">
@@ -87,11 +111,14 @@ export default function Win98Window({
         >
           <div className="title-bar-text">{title}</div>
           <div className="title-bar-controls">
-            {onClose ? (
-              <button aria-label="Close" onClick={onClose} />
-            ) : (
-              <button aria-label="Minimize" disabled />
-            )}
+            <button
+              aria-label="Minimize"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMin(true);
+              }}
+            />
+            {onClose ? <button aria-label="Close" onClick={onClose} /> : null}
           </div>
         </div>
         {children}

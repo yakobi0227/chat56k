@@ -12,6 +12,7 @@ import Profile, { type ProfileInfo } from "./Profile";
 import SignOn from "./SignOn";
 import { GAMES, type GameId } from "./games/catalog";
 import type { BfEntry, ClientEvent, ImMessage, JoinedRoom, RoomSummary } from "./types";
+import { DockButtons, DockProvider } from "./Dock";
 import { hasAttest, lastScreenName, loadVault, rememberAttest, saveVault } from "./vault";
 
 type ImThread = {
@@ -401,6 +402,7 @@ export default function App() {
   const inRooms = rooms.reduce((n, r) => n + r.count, 0);
 
   return (
+    <DockProvider>
     <div className="desktop">
       <img className="desktop-logo" src="/logo.png" alt="" />
       <div className="desktop-mark">
@@ -731,6 +733,7 @@ export default function App() {
       <div className="status-bar">
         <div className="grip" />
         <span>{connected ? (screenName ? `Signed on as ${screenName}` : "Connected") : "Not connected"}</span>
+        <DockButtons />
         {screenName && (
           <>
             <button type="button" onClick={() => setJar(true)}>
@@ -771,5 +774,6 @@ export default function App() {
         </span>
       </div>
     </div>
+    </DockProvider>
   );
 }
