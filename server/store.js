@@ -11,8 +11,15 @@ export const HOUSE_ROOMS = [
   { id: "reading-lamp", name: "Reading Lamp", blurb: "Quieter, mostly." },
 ];
 
-const DATA_DIR = process.env.DATA_DIR || fileURLToPath(new URL(".", import.meta.url));
+const DISK = "/var/data";
+const DATA_DIR =
+  process.env.DATA_DIR ||
+  (existsSync(DISK) ? DISK : fileURLToPath(new URL(".", import.meta.url)));
 const FILE = join(DATA_DIR, "data.json");
+
+export function dataFile() {
+  return FILE;
+}
 
 export function emptyData() {
   return {
@@ -50,15 +57,22 @@ export function loadStore() {
   for (const user of data.users) {
     if (!Array.isArray(user.bfList)) user.bfList = [];
     if (!Array.isArray(user.mutes)) user.mutes = [];
+    if (typeof user.bio !== "string") user.bio = "";
   }
   return data;
 }
 
 export function saveStore(data) {
   mkdirSync(dirname(FILE), { recursive: true });
+  const body = JSON.stringify(data, null, 2);
   const tmp = `${FILE}.tmp`;
-  writeFileSync(tmp, JSON.stringify(data, null, 2));
-  renameSync(tmp, FILE);
+  try {
+    writeFileSync(tmp, body);
+    renameSync(tmp, FILE);
+  } catch (err) {
+    writeFileSync(FILE, body);
+    console.error("chat56k saveStore fallback", err);
+  }
 }
 
 export function findUserByToken(data, token) {

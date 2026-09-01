@@ -21,6 +21,14 @@ npm run build
 npm start
 ```
 
+Screen names live in `data.json`. Render's free disk forgets that file every deploy and when the box sleeps. To keep people:
+
+1. Render → your web service → **Disks** → add a disk, mount path `/var/data`.
+2. Starter plan (Free cannot keep a disk).
+3. Env var optional: `DATA_DIR=/var/data`.
+
+The app uses `/var/data` automatically if that folder exists. Until a disk is mounted, this browser will put your bio back after Sign On if the host forgot you.
+
 ## Custom domain (chat56k.com)
 
 1. Render → chat56k web service → **Settings → Custom Domains**.

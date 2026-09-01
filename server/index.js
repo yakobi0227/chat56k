@@ -2,7 +2,7 @@ import http from "node:http";
 import { randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { WebSocketServer, WebSocket } from "ws";
-import { findRoomMeta, findUser, findUserByToken, loadStore, saveStore } from "./store.js";
+import { dataFile, findRoomMeta, findUser, findUserByToken, loadStore, saveStore } from "./store.js";
 import { servePublic } from "./static.js";
 import { handleGame, initGames, leaveTable, listTables } from "./games.js";
 
@@ -829,6 +829,7 @@ function bootstrap(session) {
     rooms: listRooms(),
     bfList: bfEntries(user.bfList),
     mutes: user.mutes,
+    bio: user.bio || "",
     away: session.away,
     awayMessage: session.awayMessage,
     roomId: session.roomId,
@@ -1076,4 +1077,5 @@ for (const room of rooms.values()) watchEmpty(room);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`chat56k listening on 0.0.0.0:${PORT}`);
+  console.log(`chat56k data ${dataFile()}`);
 });

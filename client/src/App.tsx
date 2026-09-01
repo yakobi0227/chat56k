@@ -12,6 +12,7 @@ import Profile, { type ProfileInfo } from "./Profile";
 import SignOn from "./SignOn";
 import type { GameId } from "./games/catalog";
 import type { BfEntry, ClientEvent, ImMessage, JoinedRoom, RoomSummary } from "./types";
+import { hasAttest, lastScreenName, loadVault, rememberAttest, saveVault } from "./vault";
 
 type ImThread = {
   peer: string;
@@ -62,6 +63,8 @@ export default function App() {
   screenNameRef.current = screenName;
   const mutesRef = useRef(mutes);
   mutesRef.current = mutes;
+  const pendingSign = useRef<{ screenName: string; password: string } | null>(null);
+  const restoreVault = useRef(false);
 
   const send = useCallback((payload: object) => {
     const ws = wsRef.current;
@@ -129,12 +132,34 @@ export default function App() {
             setIms([]);
             setBfList([]);
           }
+          if (msg.code === "NO_USER") {
+            const pending = pendingSign.current;
+            const vault = loadVault();
+            if (
+              pending &&
+              hasAttest() &&
+              vault &&
+              vault.screenName.toLowerCase() === pending.screenName.toLowerCase()
+            ) {
+              restoreVault.current = true;
+              ws?.send(
+                JSON.stringify({
+                  type: "create_account",
+                  screenName: pending.screenName,
+                  password: pending.password,
+                  attest18: true,
+                }),
+              );
+              return;
+            }
+          }
           setError(msg.message);
           return;
         }
       if (msg.type === "signed_on") {
         localStorage.setItem("chat56k.token", msg.token);
         localStorage.removeItem("chat99.token");
+        rememberAttest();
         setError("");
         setScreenName(msg.screenName);
         setRooms(msg.rooms);
@@ -144,6 +169,22 @@ export default function App() {
         setAwayMessage(msg.awayMessage || "I'm away.");
         if (msg.games) setGameTables(msg.games as TableInfo[]);
         if (!msg.roomId) setRoom(null);
+        const vault = loadVault();
+        const same = vault && vault.screenName.toLowerCase() === msg.screenName.toLowerCase();
+        if (restoreVault.current && same && vault) {
+          restoreVault.current = false;
+          if (vault.bio) send({ type: "set_profile", bio: vault.bio });
+          for (const name of vault.bfList) send({ type: "add_bf", screenName: name });
+          for (const name of vault.mutes) send({ type: "mute", screenName: name });
+        } else if (same && vault && !(msg.bio || "") && vault.bio) {
+          send({ type: "set_profile", bio: vault.bio });
+        }
+        saveVault({
+          screenName: msg.screenName,
+          bio: msg.bio || (same && vault ? vault.bio : ""),
+          bfList: msg.bfList.map((e) => e.screenName),
+          mutes: msg.mutes,
+        });
         if (!screenNameRef.current) {
           setSelectedRoomId(msg.rooms[0]?.id ?? null);
           setFocus("dir");
@@ -209,10 +250,14 @@ export default function App() {
       }
       if (msg.type === "bf_list") {
         setBfList(msg.bfList);
+        const you = screenNameRef.current;
+        if (you) saveVault({ screenName: you, bfList: msg.bfList.map((e) => e.screenName) });
         return;
       }
       if (msg.type === "mutes") {
         setMutes(msg.mutes);
+        const you = screenNameRef.current;
+        if (you) saveVault({ screenName: you, mutes: msg.mutes });
         return;
       }
       if (msg.type === "away") {
@@ -254,6 +299,9 @@ export default function App() {
           awayMessage: msg.awayMessage,
           signedOn: msg.signedOn,
         });
+        if (screenNameRef.current && msg.screenName.toLowerCase() === screenNameRef.current.toLowerCase()) {
+          saveVault({ screenName: msg.screenName, bio: msg.bio });
+        }
         setProfilePos((p) => ({ ...p, z: ++zCounter }));
         return;
       }
@@ -301,6 +349,7 @@ export default function App() {
         <SignOn
           connected={connected}
           error={error}
+          lastName={lastScreenName()}
           x={signPos.x}
           y={signPos.y}
           z={signPos.z}
@@ -311,10 +360,13 @@ export default function App() {
           onMove={(x, y) => setSignPos((p) => ({ ...p, x, y }))}
           onSignOn={(name, password) => {
             setError("");
+            pendingSign.current = { screenName: name, password };
             send({ type: "sign_on", screenName: name, password });
           }}
           onCreate={(name, password, attest18) => {
             setError("");
+            rememberAttest();
+            pendingSign.current = { screenName: name, password };
             send({ type: "create_account", screenName: name, password, attest18 });
           }}
           onClearError={() => setError("")}
@@ -521,7 +573,10 @@ export default function App() {
           onFocus={() => setProfilePos((p) => ({ ...p, z: ++zCounter }))}
           onMove={(x, y) => setProfilePos((p) => ({ ...p, x, y }))}
           onClose={() => setProfile(null)}
-          onSave={(bio) => send({ type: "set_profile", bio })}
+          onSave={(bio) => {
+            send({ type: "set_profile", bio });
+            if (profile) saveVault({ screenName: profile.screenName, bio });
+          }}
           muted={mutes.some((n) => n.toLowerCase() === profile.screenName.toLowerCase())}
           onMute={(on) => send({ type: on ? "mute" : "unmute", screenName: profile.screenName })}
           onFlag={() => setFlagName(profile.screenName)}

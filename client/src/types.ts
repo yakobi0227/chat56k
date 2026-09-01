@@ -56,6 +56,7 @@ export type ClientEvent =
       rooms: RoomSummary[];
       bfList: BfEntry[];
       mutes: string[];
+      bio?: string;
       away: boolean;
       awayMessage: string;
       roomId: string | null;

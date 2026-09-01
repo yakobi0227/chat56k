@@ -5,6 +5,7 @@ import Win98Window from "./Win98Window";
 type Props = {
   connected: boolean;
   error: string;
+  lastName: string;
   x: number;
   y: number;
   z: number;
@@ -18,6 +19,7 @@ type Props = {
 export default function SignOn({
   connected,
   error,
+  lastName,
   x,
   y,
   z,
@@ -27,8 +29,8 @@ export default function SignOn({
   onCreate,
   onClearError,
 }: Props) {
-  const [mode, setMode] = useState<"on" | "new">("new");
-  const [screenName, setScreenName] = useState("");
+  const [mode, setMode] = useState<"on" | "new">(lastName ? "on" : "new");
+  const [screenName, setScreenName] = useState(lastName);
   const [password, setPassword] = useState("");
   const [attest18, setAttest18] = useState(false);
 
