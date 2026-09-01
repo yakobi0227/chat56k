@@ -237,6 +237,8 @@ export default function App() {
           away: msg.away,
           awayMessage: msg.awayMessage,
           signedOn: msg.signedOn,
+          photo: msg.photo,
+          photoAt: msg.photoAt,
         });
         setProfilePos((p) => ({ ...p, z: ++zCounter }));
         return;
@@ -502,6 +504,7 @@ export default function App() {
           onMove={(x, y) => setProfilePos((p) => ({ ...p, x, y }))}
           onClose={() => setProfile(null)}
           onSave={(bio) => send({ type: "set_profile", bio })}
+          onPhoto={(data) => send({ type: "set_photo", data })}
         />
       )}
 

@@ -10,6 +10,9 @@ export default defineConfig({
         target: "http://127.0.0.1:3999",
         ws: true,
       },
+      "/photo": {
+        target: "http://127.0.0.1:3999",
+      },
     },
   },
 });
