@@ -227,8 +227,8 @@ export default function App() {
 
   return (
     <div className="desktop">
+      <img className="desktop-logo" src="/logo.png" alt="" />
       <div className="desktop-mark">
-        <div className="word">chat56k</div>
         <div className="tag">23 to a room · no feed · no algorithm</div>
       </div>
 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Mark from "./Mark";
 import Win98Window from "./Win98Window";
 
 type Props = {
@@ -37,15 +36,15 @@ export default function SignOn({
       title="chat56k — Sign On"
       x={x}
       y={y}
-      w={430}
-      h={mode === "new" ? 460 : 330}
+      w={460}
+      h={mode === "new" ? 500 : 360}
       z={z}
       onFocus={onFocus}
       onMove={onMove}
     >
       <div className="window-body pad">
         <div className="signon-hero">
-          <Mark />
+          <img className="signon-logo" src="/logo.png" alt="Chat56k" width={88} height={88} />
           <div>
             <h1>chat56k</h1>
             <p>Dial-up rooms. 23 seats. No feed. That’s the whole trick.</p>

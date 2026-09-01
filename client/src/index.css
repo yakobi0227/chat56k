@@ -46,23 +46,27 @@ textarea {
   position: relative;
 }
 
+.desktop-logo {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  width: min(520px, 56vw);
+  height: auto;
+  opacity: 0.22;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .desktop-mark {
   position: absolute;
   right: 28px;
   bottom: 36px;
   text-align: right;
   color: #d8fff8;
-  opacity: 0.5;
+  opacity: 0.55;
   pointer-events: none;
-}
-
-.desktop-mark .word {
-  font-family: "Arial Black", Impact, sans-serif;
-  font-size: 42px;
-  letter-spacing: -1px;
-  line-height: 1;
-  color: var(--signal);
-  text-shadow: 2px 2px 0 #003333;
 }
 
 .desktop-mark .tag {
@@ -130,6 +134,16 @@ textarea {
   padding: 10px 12px;
   margin: -8px -8px 10px;
   border-bottom: 3px solid var(--signal);
+}
+
+.signon-logo {
+  width: 88px;
+  height: 88px;
+  flex: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #008080;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #404040;
 }
 
 .signon-hero h1 {
