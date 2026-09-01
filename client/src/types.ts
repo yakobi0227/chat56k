@@ -64,6 +64,7 @@ export type ClientEvent =
       stats?: { visitors: number; signOns: number };
     }
   | { type: "stats"; visitors: number; signOns: number }
+  | { type: "signed_off" }
   | { type: "rooms"; rooms: RoomSummary[] }
   | { type: "joined"; room: JoinedRoom }
   | {

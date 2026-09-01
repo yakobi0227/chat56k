@@ -70,6 +70,30 @@ export default function App() {
   const pendingSign = useRef<{ screenName: string; password: string } | null>(null);
   const restoreVault = useRef(false);
 
+  const clearSession = useCallback(() => {
+    localStorage.removeItem("chat56k.token");
+    localStorage.removeItem("chat99.token");
+    setScreenName(null);
+    setRoom(null);
+    setSelectedMember(null);
+    setIms([]);
+    setBfList([]);
+    setMutes([]);
+    setTables([]);
+    setGameStates({});
+    setGameTables([]);
+    setGamesOpen(false);
+    setProfile(null);
+    setFlagName(null);
+    setGameInvite(null);
+    setDraft("");
+    setImDrafts({});
+    setAway(false);
+    setError("");
+    setFocus("signon");
+    document.title = "chat56k";
+  }, []);
+
   useEffect(() => {
     fetch("/hit")
       .then((r) => r.json())
@@ -171,6 +195,10 @@ export default function App() {
         }
       if (msg.type === "stats") {
         setStats({ visitors: msg.visitors, signOns: msg.signOns });
+        return;
+      }
+      if (msg.type === "signed_off") {
+        clearSession();
         return;
       }
       if (msg.type === "signed_on") {
@@ -368,7 +396,7 @@ export default function App() {
       clearTimeout(retry);
       ws?.close();
     };
-  }, [openPrivate]);
+  }, [openPrivate, clearSession]);
 
   const inRooms = rooms.reduce((n, r) => n + r.count, 0);
 
@@ -722,6 +750,17 @@ export default function App() {
               }}
             >
               Games
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("chat56k.token");
+                localStorage.removeItem("chat99.token");
+                send({ type: "sign_off" });
+                clearSession();
+              }}
+            >
+              Sign Off
             </button>
           </>
         )}

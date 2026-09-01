@@ -81,6 +81,12 @@ async function handle(ws, msg) {
       return signOn(ws, msg);
     case "resume":
       return resume(ws, msg.token);
+    case "sign_off":
+      if (!session) {
+        send(ws, { type: "signed_off" });
+        return;
+      }
+      return signOff(ws, session);
     case "list_rooms":
       if (!session) return needSignOn(ws);
       return send(ws, { type: "rooms", rooms: listRooms() });
@@ -688,6 +694,26 @@ function setProfile(ws, session, bio) {
   user.bio = cleanText(bio).slice(0, 200);
   saveStore(db);
   getProfile(ws, session.screenName);
+}
+
+function signOff(ws, session) {
+  const ghost = ghosts.get(session.screenName);
+  if (ghost) {
+    clearTimeout(ghost.timer);
+    ghosts.delete(session.screenName);
+  }
+  leaveTable(session);
+  leaveRoom(session, { announce: true });
+  sessions.delete(ws);
+  if (byName.get(session.screenName) === ws) byName.delete(session.screenName);
+  const user = findUser(db, session.screenName);
+  if (user) {
+    user.sessionToken = newToken();
+    saveStore(db);
+  }
+  broadcastPresence(session.screenName);
+  broadcastDirectory();
+  send(ws, { type: "signed_off" });
 }
 
 function disconnect(ws) {
