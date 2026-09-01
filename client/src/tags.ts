@@ -5,4 +5,5 @@ export const TAGS = [
   "Cable internet? Check out Mr./Mrs. Rockefeller over here.",
   "Back to an era when things didn't suck.",
   "Where anybody could be anybody and everyone just went with it.",
+  "I'm counting on someone to create a Buffy the Vampire Slayer RP room.",
 ];
