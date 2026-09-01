@@ -38,6 +38,7 @@ export type JoinedRoom = {
   members: Member[];
   messages: ChatMessage[];
   bans: string[];
+  silenced: string[];
   you: string;
 };
 
@@ -68,8 +69,10 @@ export type ClientEvent =
       members: Member[];
       operator: string | null;
       bans: string[];
+      silenced?: string[];
     }
-  | { type: "room_state"; members: Member[]; operator: string | null; bans: string[] }
+  | { type: "room_state"; members: Member[]; operator: string | null; bans: string[]; silenced?: string[] }
+  | { type: "silenced_ok"; target: string; on: boolean }
   | { type: "im"; from: string; to: string; text: string; ts: number; id: string }
   | { type: "bf_list"; bfList: BfEntry[] }
   | { type: "mutes"; mutes: string[] }

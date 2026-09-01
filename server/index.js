@@ -119,6 +119,12 @@ async function handle(ws, msg) {
     case "unban":
       if (!session) return needSignOn(ws);
       return unban(ws, session, msg.screenName);
+    case "silence":
+      if (!session) return needSignOn(ws);
+      return silenceSn(ws, session, msg.screenName, true);
+    case "unsilence":
+      if (!session) return needSignOn(ws);
+      return silenceSn(ws, session, msg.screenName, false);
     case "pass_op":
       if (!session) return needSignOn(ws);
       return passOp(ws, session, msg.screenName);
@@ -391,6 +397,17 @@ function say(ws, session, text) {
     text: body,
     ts: Date.now(),
   };
+  if (isSilenced(session.screenName)) {
+    send(ws, {
+      type: "room_event",
+      message,
+      members: memberList(room),
+      operator: room.operator,
+      bans: opBans(room, session.screenName),
+      silenced: [],
+    });
+    return;
+  }
   pushMessage(room, message);
   emitRoom(room, message);
 }
@@ -420,6 +437,7 @@ function sendIm(ws, session, to, text) {
     id: randomUUID(),
   };
   send(ws, payload);
+  if (isSilenced(session.screenName)) return;
   if (!isMuted(targetSession.screenName, session.screenName)) {
     send(targetWs, payload);
   }
@@ -539,6 +557,24 @@ function unban(ws, session, screenName) {
   meta.bans = meta.bans.filter((n) => n.toLowerCase() !== key);
   saveStore(db);
   emitRoom(room);
+}
+
+function silenceSn(ws, session, screenName, on) {
+  const room = requireOp(ws, session);
+  if (!room) return;
+  const name = canonicalName(screenName) || String(screenName || "").trim();
+  if (!name) return;
+  if (name.toLowerCase() === session.screenName.toLowerCase()) {
+    send(ws, { type: "error", code: "SILENCE_SELF", message: "You cannot perm mute yourself." });
+    return;
+  }
+  if (!Array.isArray(db.silenced)) db.silenced = [];
+  const key = name.toLowerCase();
+  db.silenced = db.silenced.filter((n) => n.toLowerCase() !== key);
+  if (on) db.silenced.push(name);
+  saveStore(db);
+  send(ws, { type: "silenced_ok", target: name, on: Boolean(on) });
+  for (const r of rooms.values()) emitRoom(r);
 }
 
 function passOp(ws, session, screenName) {
@@ -663,6 +699,7 @@ function snapshot(room, you) {
       members: memberList(room),
       messages: visibleMessages(you, room.messages),
       bans: isOp ? meta?.bans ?? [] : [],
+      silenced: isOp ? db.silenced ?? [] : [],
       you,
     },
   };
@@ -681,6 +718,7 @@ function emitRoom(room, incoming, except = null) {
     const ws = byName.get(name);
     if (!ws) continue;
     if (incoming?.kind === "chat" && isMuted(name, incoming.from)) continue;
+    if (incoming?.kind === "chat" && name !== incoming.from && isSilenced(incoming.from)) continue;
     if (incoming) {
       send(ws, {
         type: "room_event",
@@ -688,9 +726,16 @@ function emitRoom(room, incoming, except = null) {
         members,
         operator: room.operator,
         bans: opBans(room, name),
+        silenced: opSilenced(room, name),
       });
     } else {
-      send(ws, { type: "room_state", members, operator: room.operator, bans: opBans(room, name) });
+      send(ws, {
+        type: "room_state",
+        members,
+        operator: room.operator,
+        bans: opBans(room, name),
+        silenced: opSilenced(room, name),
+      });
     }
   }
 }
@@ -698,6 +743,11 @@ function emitRoom(room, incoming, except = null) {
 function opBans(room, name) {
   if (room.operator !== name) return [];
   return findRoomMeta(db, room.id)?.bans ?? [];
+}
+
+function opSilenced(room, name) {
+  if (room.operator !== name) return [];
+  return db.silenced ?? [];
 }
 
 function memberList(room) {
@@ -795,7 +845,17 @@ function broadcastPresence(screenName) {
 }
 
 function visibleMessages(you, messages) {
-  return messages.filter((m) => m.kind !== "chat" || !isMuted(you, m.from));
+  return messages.filter((m) => {
+    if (m.kind !== "chat") return true;
+    if (isMuted(you, m.from)) return false;
+    if (m.from !== you && isSilenced(m.from)) return false;
+    return true;
+  });
+}
+
+function isSilenced(name) {
+  if (!Array.isArray(db.silenced)) return false;
+  return db.silenced.some((n) => n.toLowerCase() === String(name || "").toLowerCase());
 }
 
 function isMuted(owner, other) {

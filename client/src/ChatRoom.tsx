@@ -25,6 +25,7 @@ type Props = {
   onKick: (name: string) => void;
   onBan: (name: string) => void;
   onUnban: (name: string) => void;
+  onSilence: (name: string, on: boolean) => void;
   onPass: (name: string) => void;
   onFlag: (name: string) => void;
 };
@@ -52,6 +53,7 @@ export default function ChatRoom({
   onKick,
   onBan,
   onUnban,
+  onSilence,
   onPass,
   onFlag,
 }: Props) {
@@ -64,6 +66,8 @@ export default function ChatRoom({
   const peer = selectedMember && selectedMember !== you ? selectedMember : null;
   const isOp = room.operator === you;
   const muted = peer ? mutes.some((n) => n.toLowerCase() === peer.toLowerCase()) : false;
+  const quiet = room.silenced ?? [];
+  const peerQuiet = peer ? quiet.some((n) => n.toLowerCase() === peer.toLowerCase()) : false;
 
   return (
     <Win98Window
@@ -80,6 +84,7 @@ export default function ChatRoom({
       <div className="window-body pad">
         <div className="caption">
           {room.blurb} Host: {room.operator ?? "—"}. Double-click a name for private chat.
+          {isOp ? " Perm mute: they stay, nobody else sees their lines." : ""}
         </div>
         <div className="room-layout">
           <div className="sunken transcript" ref={scroller}>
@@ -107,8 +112,29 @@ export default function ChatRoom({
                 {m.name}
                 {m.away ? " (away)" : ""}
                 {mutes.some((n) => n.toLowerCase() === m.name.toLowerCase()) ? " (muted)" : ""}
+                {isOp && quiet.some((n) => n.toLowerCase() === m.name.toLowerCase()) ? " (quiet)" : ""}
               </div>
             ))}
+            {isOp && quiet.length > 0 && (
+              <div className="ban-block">
+                <div className="bf-head">Perm muted</div>
+                {quiet.map((name) => (
+                  <div key={name} className="person" onClick={() => onSelectMember(name)}>
+                    {name}
+                    <button
+                      type="button"
+                      className="tiny"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSilence(name, false);
+                      }}
+                    >
+                      hear
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             {isOp && room.bans.length > 0 && (
               <div className="ban-block">
                 <div className="bf-head">Banned</div>
@@ -170,6 +196,9 @@ export default function ChatRoom({
                   </button>
                   <button type="button" disabled={!peer} onClick={() => peer && onBan(peer)}>
                     Ban
+                  </button>
+                  <button type="button" disabled={!peer} onClick={() => peer && onSilence(peer, !peerQuiet)}>
+                    {peerQuiet ? "Unsilence" : "Perm mute"}
                   </button>
                   <button type="button" disabled={!peer} onClick={() => peer && onPass(peer)}>
                     Pass

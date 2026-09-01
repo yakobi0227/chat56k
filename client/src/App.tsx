@@ -176,6 +176,7 @@ export default function App() {
                 members: msg.members,
                 operator: msg.operator,
                 bans: msg.operator === prev.you ? msg.bans : [],
+                silenced: msg.operator === prev.you ? msg.silenced ?? [] : [],
                 messages: [...prev.messages, msg.message].slice(-200),
               }
             : prev,
@@ -190,6 +191,7 @@ export default function App() {
                 members: msg.members,
                 operator: msg.operator,
                 bans: msg.operator === prev.you ? msg.bans : [],
+                silenced: msg.operator === prev.you ? msg.silenced ?? [] : [],
               }
             : prev,
         );
@@ -230,6 +232,14 @@ export default function App() {
       }
       if (msg.type === "report_ok") {
         setNotice(`Flagged ${msg.target}${msg.reason ? ` — ${msg.reason}` : ""}.`);
+        return;
+      }
+      if (msg.type === "silenced_ok") {
+        setNotice(
+          msg.on
+            ? `${msg.target} is perm muted. They can stay. Nobody else will see their room lines or IMs.`
+            : `${msg.target} can be heard again.`,
+        );
         return;
       }
       if (msg.type === "game_tables") {
@@ -409,6 +419,7 @@ export default function App() {
           onKick={(name) => send({ type: "kick", screenName: name })}
           onBan={(name) => send({ type: "ban", screenName: name })}
           onUnban={(name) => send({ type: "unban", screenName: name })}
+          onSilence={(name, on) => send({ type: on ? "silence" : "unsilence", screenName: name })}
           onPass={(name) => send({ type: "pass_op", screenName: name })}
           onFlag={(name) => setFlagName(name)}
         />

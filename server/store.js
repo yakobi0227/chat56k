@@ -24,6 +24,7 @@ export function emptyData() {
       bans: [],
     })),
     reports: [],
+    silenced: [],
   };
 }
 
@@ -37,6 +38,7 @@ export function loadStore() {
   if (!Array.isArray(data.users)) data.users = [];
   if (!Array.isArray(data.rooms)) data.rooms = [];
   if (!Array.isArray(data.reports)) data.reports = [];
+  if (!Array.isArray(data.silenced)) data.silenced = [];
   for (const house of HOUSE_ROOMS) {
     if (!data.rooms.some((r) => r.id === house.id)) {
       data.rooms.unshift({ ...house, house: true, createdBy: "chat56k", bans: [] });
