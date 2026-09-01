@@ -23,9 +23,12 @@ type Props = {
   onClose: () => void;
   onSave: (bio: string) => void;
   onPhoto: (data: string | null) => void;
+  muted?: boolean;
+  onMute?: (on: boolean) => void;
+  onFlag?: () => void;
 };
 
-export default function Profile({ you, profile, x, y, z, onFocus, onMove, onClose, onSave, onPhoto }: Props) {
+export default function Profile({ you, profile, x, y, z, onFocus, onMove, onClose, onSave, onPhoto, muted, onMute, onFlag }: Props) {
   const mine = profile.screenName === you;
   const [bio, setBio] = useState(profile.bio);
   useEffect(() => setBio(profile.bio), [profile.bio, profile.screenName]);
@@ -115,7 +118,17 @@ export default function Profile({ you, profile, x, y, z, onFocus, onMove, onClos
             </div>
           </>
         ) : (
-          <div className="sunken profile-read">{profile.bio || "No bio. They never filled it in. Very 1999."}</div>
+          <>
+            <div className="sunken profile-read">{profile.bio || "No bio. They never filled it in. Very 1999."}</div>
+            <div className="dir-actions">
+              <button type="button" onClick={() => onMute?.(!muted)}>
+                {muted ? "Unmute" : "Mute"}
+              </button>
+              <button type="button" onClick={() => onFlag?.()}>
+                Flag
+              </button>
+            </div>
+          </>
         )}
       </div>
     </Win98Window>

@@ -7,7 +7,6 @@ type Props = {
   you: string;
   selectedMember: string | null;
   draft: string;
-  reportReason: string;
   mutes: string[];
   error: string;
   x: number;
@@ -27,8 +26,7 @@ type Props = {
   onBan: (name: string) => void;
   onUnban: (name: string) => void;
   onPass: (name: string) => void;
-  onReportReason: (text: string) => void;
-  onReport: (name: string) => void;
+  onFlag: (name: string) => void;
 };
 
 export default function ChatRoom({
@@ -36,7 +34,6 @@ export default function ChatRoom({
   you,
   selectedMember,
   draft,
-  reportReason,
   mutes,
   error,
   x,
@@ -56,8 +53,7 @@ export default function ChatRoom({
   onBan,
   onUnban,
   onPass,
-  onReportReason,
-  onReport,
+  onFlag,
 }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -87,9 +83,15 @@ export default function ChatRoom({
         </div>
         <div className="room-layout">
           <div className="sunken transcript" ref={scroller}>
-            {room.messages.map((m) => (
-              <Line key={m.id} message={m} />
-            ))}
+            {room.messages
+              .filter(
+                (m) =>
+                  m.kind !== "chat" ||
+                  !mutes.some((n) => n.toLowerCase() === m.from.toLowerCase()),
+              )
+              .map((m) => (
+                <Line key={m.id} message={m} />
+              ))}
           </div>
           <div className="sunken people">
             {room.members.map((m) => (
@@ -104,6 +106,7 @@ export default function ChatRoom({
                 {m.op ? "@" : ""}
                 {m.name}
                 {m.away ? " (away)" : ""}
+                {mutes.some((n) => n.toLowerCase() === m.name.toLowerCase()) ? " (muted)" : ""}
               </div>
             ))}
             {isOp && room.bans.length > 0 && (
@@ -157,6 +160,9 @@ export default function ChatRoom({
               <button type="button" disabled={!peer} onClick={() => peer && onMute(peer, !muted)}>
                 {muted ? "Unmute" : "Mute"}
               </button>
+              <button type="button" disabled={!peer} onClick={() => peer && onFlag(peer)}>
+                Flag
+              </button>
               {isOp && (
                 <>
                   <button type="button" disabled={!peer} onClick={() => peer && onKick(peer)}>
@@ -173,24 +179,6 @@ export default function ChatRoom({
             </div>
           </form>
         </div>
-        <form
-          className="report-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (peer) onReport(peer);
-          }}
-        >
-          <input
-            placeholder={peer ? `Report ${peer}…` : "Select a name to report"}
-            maxLength={120}
-            value={reportReason}
-            disabled={!peer}
-            onChange={(e) => onReportReason(e.target.value)}
-          />
-          <button type="submit" disabled={!peer || !reportReason.trim()}>
-            Report
-          </button>
-        </form>
         <div className="error-line">{error}</div>
       </div>
     </Win98Window>

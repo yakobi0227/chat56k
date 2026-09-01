@@ -76,7 +76,7 @@ export type ClientEvent =
   | { type: "away"; away: boolean; awayMessage: string }
   | { type: "kicked"; roomId: string; roomName: string; by: string }
   | { type: "banned"; roomId: string; roomName: string; by: string }
-  | { type: "report_ok"; target: string }
+  | { type: "report_ok"; target: string; reason?: string }
   | { type: "error"; code: string; message: string }
   | {
       type: "profile";

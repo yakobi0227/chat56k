@@ -17,11 +17,14 @@ type Props = {
   draft: string;
   connected: boolean;
   error: string;
+  muted: boolean;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onClose: () => void;
   onDraft: (text: string) => void;
   onSend: () => void;
+  onMute: (on: boolean) => void;
+  onFlag: () => void;
 };
 
 export default function PrivateChat({
@@ -30,11 +33,14 @@ export default function PrivateChat({
   draft,
   connected,
   error,
+  muted,
   onFocus,
   onMove,
   onClose,
   onDraft,
   onSend,
+  onMute,
+  onFlag,
 }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -90,7 +96,15 @@ export default function PrivateChat({
                 }
               }}
             />
-            <button type="submit">Send</button>
+            <div className="room-ops">
+              <button type="submit">Send</button>
+              <button type="button" onClick={() => onMute(!muted)}>
+                {muted ? "Unmute" : "Mute"}
+              </button>
+              <button type="button" onClick={onFlag}>
+                Flag
+              </button>
+            </div>
           </form>
         </div>
         {!connected && <div className="offline">Not connected.</div>}

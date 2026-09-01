@@ -3,6 +3,7 @@ import BfList from "./BfList";
 import Tagline from "./Tagline";
 import ChatRoom from "./ChatRoom";
 import DonateJar from "./DonateJar";
+import Flag from "./Flag";
 import Directory from "./Directory";
 import Games, { type TableInfo } from "./Games";
 import GameTable from "./GameTable";
@@ -42,7 +43,7 @@ export default function App() {
   const [bfAdd, setBfAdd] = useState("");
   const [newRoomName, setNewRoomName] = useState("");
   const [newRoomBlurb, setNewRoomBlurb] = useState("");
-  const [reportReason, setReportReason] = useState("");
+  const [flagName, setFlagName] = useState<string | null>(null);
   const [focus, setFocus] = useState("signon");
   const [signPos, setSignPos] = useState({ x: 260, y: 72, z: 6 });
   const [bfPos, setBfPos] = useState({ x: 16, y: 16, z: 3 });
@@ -228,8 +229,7 @@ export default function App() {
         return;
       }
       if (msg.type === "report_ok") {
-        setReportReason("");
-        setNotice(`Report on ${msg.target} was filed.`);
+        setNotice(`Flagged ${msg.target}${msg.reason ? ` — ${msg.reason}` : ""}.`);
         return;
       }
       if (msg.type === "game_tables") {
@@ -338,6 +338,8 @@ export default function App() {
             onRemove={(name) => send({ type: "remove_bf", screenName: name })}
             onOpen={(name) => openPrivate(name)}
             onInfo={(name) => send({ type: "get_profile", screenName: name })}
+            onMute={(name, on) => send({ type: on ? "mute" : "unmute", screenName: name })}
+            mutes={mutes}
             onAway={(next, message) => send({ type: "set_away", away: next, message })}
             onAwayMessage={setAwayMessage}
           />
@@ -378,7 +380,6 @@ export default function App() {
           you={screenName}
           selectedMember={selectedMember}
           draft={draft}
-          reportReason={reportReason}
           mutes={mutes}
           error={focus === "room" ? error : ""}
           x={roomPos.x}
@@ -411,8 +412,7 @@ export default function App() {
           onBan={(name) => send({ type: "ban", screenName: name })}
           onUnban={(name) => send({ type: "unban", screenName: name })}
           onPass={(name) => send({ type: "pass_op", screenName: name })}
-          onReportReason={setReportReason}
-          onReport={(name) => send({ type: "report", screenName: name, reason: reportReason })}
+          onFlag={(name) => setFlagName(name)}
         />
       )}
 
@@ -425,6 +425,7 @@ export default function App() {
             draft={imDrafts[thread.peer] ?? ""}
             connected={connected}
             error={focus === thread.peer ? error : ""}
+            muted={mutes.some((n) => n.toLowerCase() === thread.peer.toLowerCase())}
             onFocus={() => {
               setFocus(thread.peer);
               setIms((prev) =>
@@ -442,6 +443,8 @@ export default function App() {
               send({ type: "im", to: thread.peer, text });
               setImDrafts((d) => ({ ...d, [thread.peer]: "" }));
             }}
+            onMute={(on) => send({ type: on ? "mute" : "unmute", screenName: thread.peer })}
+            onFlag={() => setFlagName(thread.peer)}
           />
         ))}
 
@@ -511,6 +514,21 @@ export default function App() {
           onClose={() => setProfile(null)}
           onSave={(bio) => send({ type: "set_profile", bio })}
           onPhoto={(data) => send({ type: "set_photo", data })}
+          muted={mutes.some((n) => n.toLowerCase() === profile.screenName.toLowerCase())}
+          onMute={(on) => send({ type: on ? "mute" : "unmute", screenName: profile.screenName })}
+          onFlag={() => setFlagName(profile.screenName)}
+        />
+      )}
+
+      {screenName && flagName && (
+        <Flag
+          screenName={flagName}
+          onClose={() => setFlagName(null)}
+          onSubmit={(reason, note, alsoMute) => {
+            send({ type: "report", screenName: flagName, reason, note });
+            if (alsoMute) send({ type: "mute", screenName: flagName });
+            setFlagName(null);
+          }}
         />
       )}
 

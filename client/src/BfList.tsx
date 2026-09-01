@@ -18,6 +18,8 @@ type Props = {
   onRemove: (name: string) => void;
   onOpen: (name: string) => void;
   onInfo: (name: string) => void;
+  onMute: (name: string, on: boolean) => void;
+  mutes: string[];
   onAway: (away: boolean, message: string) => void;
   onAwayMessage: (value: string) => void;
 };
@@ -45,6 +47,8 @@ export default function BfList({
   onRemove,
   onOpen,
   onInfo,
+  onMute,
+  mutes,
   onAway,
   onAwayMessage,
 }: Props) {
@@ -71,6 +75,15 @@ export default function BfList({
                     <span className="bf-name">{e.screenName}</span>
                     <button type="button" className="tiny" onClick={() => onInfo(e.screenName)}>
                       i
+                    </button>
+                    <button
+                      type="button"
+                      className="tiny"
+                      onClick={() =>
+                        onMute(e.screenName, !mutes.some((n) => n.toLowerCase() === e.screenName.toLowerCase()))
+                      }
+                    >
+                      {mutes.some((n) => n.toLowerCase() === e.screenName.toLowerCase()) ? "unm" : "mut"}
                     </button>
                     <button type="button" className="tiny" onClick={() => onRemove(e.screenName)}>
                       ×

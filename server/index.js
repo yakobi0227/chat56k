@@ -125,7 +125,7 @@ async function handle(ws, msg) {
       return passOp(ws, session, msg.screenName);
     case "report":
       if (!session) return needSignOn(ws);
-      return report(ws, session, msg.screenName, msg.reason);
+      return report(ws, session, msg.screenName, msg.reason, msg.note);
     case "get_profile":
       if (!session) return needSignOn(ws);
       return getProfile(ws, msg.screenName || session.screenName);
@@ -465,6 +465,7 @@ function muteSn(ws, session, screenName, on) {
   }
   const user = findUser(db, session.screenName);
   const key = name.toLowerCase();
+  if (!Array.isArray(user.mutes)) user.mutes = [];
   user.mutes = user.mutes.filter((n) => n.toLowerCase() !== key);
   if (on) user.mutes.push(canonicalName(name) || name);
   saveStore(db);
@@ -557,11 +558,24 @@ function passOp(ws, session, screenName) {
   announceRoom(room, `${session.screenName} passed the operator to ${target}.`);
 }
 
-function report(ws, session, screenName, reason) {
+const REPORT_REASONS = [
+  "Scam / fraud",
+  "Harassment",
+  "Sexual misconduct",
+  "Impersonation",
+  "Spam",
+  "Other",
+];
+
+function report(ws, session, screenName, reason, note) {
   const name = canonicalName(screenName) || String(screenName || "").trim();
-  const why = cleanText(reason);
+  const why = REPORT_REASONS.includes(String(reason)) ? String(reason) : "";
   if (!name || !why) {
-    send(ws, { type: "error", code: "BAD_REPORT", message: "Pick a screen name and say why." });
+    send(ws, { type: "error", code: "BAD_REPORT", message: "Pick a screen name and a reason." });
+    return;
+  }
+  if (name.toLowerCase() === session.screenName.toLowerCase()) {
+    send(ws, { type: "error", code: "REPORT_SELF", message: "You cannot flag yourself." });
     return;
   }
   db.reports.push({
@@ -570,11 +584,12 @@ function report(ws, session, screenName, reason) {
     target: name,
     roomId: session.roomId,
     reason: why,
+    note: cleanText(note).slice(0, 200),
     ts: Date.now(),
   });
   if (db.reports.length > 500) db.reports.splice(0, db.reports.length - 500);
   saveStore(db);
-  send(ws, { type: "report_ok", target: name });
+  send(ws, { type: "report_ok", target: name, reason: why });
 }
 
 function getProfile(ws, screenName) {
@@ -804,7 +819,7 @@ function visibleMessages(you, messages) {
 
 function isMuted(owner, other) {
   const user = findUser(db, owner);
-  if (!user) return false;
+  if (!user || !Array.isArray(user.mutes)) return false;
   return user.mutes.some((n) => n.toLowerCase() === String(other).toLowerCase());
 }
 

@@ -45,6 +45,10 @@ export function loadStore() {
   for (const room of data.rooms) {
     if (!Array.isArray(room.bans)) room.bans = [];
   }
+  for (const user of data.users) {
+    if (!Array.isArray(user.bfList)) user.bfList = [];
+    if (!Array.isArray(user.mutes)) user.mutes = [];
+  }
   return data;
 }
 
