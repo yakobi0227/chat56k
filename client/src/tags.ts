@@ -8,4 +8,5 @@ export const TAGS = [
   "I'm counting on someone to create a Buffy the Vampire Slayer RP room.",
   "When internet was mailed to you on a CD.",
   "If you remember the sound of a 56k modem, this was made for you.",
+  "Place your favorite band's depressing lyrics in your away message.",
 ];
