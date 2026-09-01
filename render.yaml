@@ -5,7 +5,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    buildCommand: npm run render-build
+    buildCommand: npm run build
     startCommand: node server/index.js
     healthCheckPath: /health
     domains:

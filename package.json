@@ -8,9 +8,9 @@
     "dev": "concurrently -n server,client -c yellow,cyan \"npm run server\" \"npm run client\"",
     "server": "node server/index.js",
     "client": "npm run dev --prefix client",
-    "build": "npm run build --prefix client",
+    "build": "npm install --prefix client --include=dev && npm --prefix client run build",
     "start": "node server/index.js",
-    "render-build": "npm install --omit=dev && npm install --prefix client --include=dev && npm run build --prefix client"
+    "render-build": "npm install --prefix client --include=dev && npm --prefix client run build"
   },
   "engines": {
     "node": ">=20"
