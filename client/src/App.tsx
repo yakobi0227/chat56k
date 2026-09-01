@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import BfList from "./BfList";
 import Tagline from "./Tagline";
 import ChatRoom from "./ChatRoom";
+import DonateJar from "./DonateJar";
 import Directory from "./Directory";
 import Games, { type TableInfo } from "./Games";
 import GameTable from "./GameTable";
@@ -54,6 +55,7 @@ export default function App() {
   const [gameStates, setGameStates] = useState<Record<string, Record<string, unknown>>>({});
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [profilePos, setProfilePos] = useState({ x: 300, y: 80, z: 8 });
+  const [jar, setJar] = useState(false);
 
   const screenNameRef = useRef(screenName);
   screenNameRef.current = screenName;
@@ -144,6 +146,10 @@ export default function App() {
         if (!screenNameRef.current) {
           setSelectedRoomId(msg.rooms[0]?.id ?? null);
           setFocus("dir");
+          const hideUntil = Number(localStorage.getItem("chat56k.jar") || 0);
+          if (Date.now() > hideUntil) {
+            window.setTimeout(() => setJar(true), 2500);
+          }
         }
         document.title = `chat56k — ${msg.screenName}`;
         return;
@@ -508,6 +514,15 @@ export default function App() {
         />
       )}
 
+      {screenName && jar && (
+        <DonateJar
+          onClose={() => {
+            localStorage.setItem("chat56k.jar", String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+            setJar(false);
+          }}
+        />
+      )}
+
       {notice && (
         <div className="notice-modal">
           <div className="window" style={{ width: 320 }}>
@@ -533,6 +548,9 @@ export default function App() {
         <span>{connected ? (screenName ? `Signed on as ${screenName}` : "Connected") : "Not connected"}</span>
         {screenName && (
           <>
+            <button type="button" onClick={() => setJar(true)}>
+              Jar
+            </button>
             <button
               type="button"
               onClick={() => send({ type: "get_profile", screenName })}
