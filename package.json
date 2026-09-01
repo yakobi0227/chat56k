@@ -10,7 +10,7 @@
     "client": "npm run dev --prefix client",
     "build": "npm run build --prefix client",
     "start": "node server/index.js",
-    "render-build": "npm ci --omit=dev && npm ci --prefix client --include=dev && npm run build --prefix client"
+    "render-build": "npm install --omit=dev && npm install --prefix client --include=dev && npm run build --prefix client"
   },
   "engines": {
     "node": ">=20"
