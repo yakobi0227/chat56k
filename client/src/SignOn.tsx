@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Tagline from "./Tagline";
 import Win98Window from "./Win98Window";
 
 type Props = {
@@ -47,7 +48,9 @@ export default function SignOn({
           <img className="signon-logo" src="/logo.png" alt="Chat56k" width={88} height={88} />
           <div>
             <h1>chat56k</h1>
-            <p>When the internet was cool.</p>
+            <p>
+              <Tagline />
+            </p>
           </div>
         </div>
         <div className="tabs">

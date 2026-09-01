@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import BfList from "./BfList";
+import Tagline from "./Tagline";
 import ChatRoom from "./ChatRoom";
 import Directory from "./Directory";
 import PrivateChat from "./PrivateChat";
@@ -229,7 +230,9 @@ export default function App() {
     <div className="desktop">
       <img className="desktop-logo" src="/logo.png" alt="" />
       <div className="desktop-mark">
-        <div className="tag">When the internet was cool.</div>
+        <div className="tag">
+          <Tagline />
+        </div>
       </div>
 
       {!screenName && (
