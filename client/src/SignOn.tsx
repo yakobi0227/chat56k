@@ -47,7 +47,7 @@ export default function SignOn({
           <img className="signon-logo" src="/logo.png" alt="Chat56k" width={88} height={88} />
           <div>
             <h1>chat56k</h1>
-            <p>Dial-up rooms. 23 seats. No feed. That’s the whole trick.</p>
+            <p>When the internet was cool.</p>
           </div>
         </div>
         <div className="tabs">

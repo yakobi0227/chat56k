@@ -229,7 +229,7 @@ export default function App() {
     <div className="desktop">
       <img className="desktop-logo" src="/logo.png" alt="" />
       <div className="desktop-mark">
-        <div className="tag">23 to a room · no feed · no algorithm</div>
+        <div className="tag">When the internet was cool.</div>
       </div>
 
       {!screenName && (
