@@ -1,6 +1,7 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { bumpVisitor, getStats } from "./store.js";
 
 const DIST = fileURLToPath(new URL("../client/dist", import.meta.url));
 
@@ -31,6 +32,16 @@ export function servePublic(req, res) {
     return;
   }
 
+  if (url.pathname === "/stats") {
+    json(res, getStats());
+    return;
+  }
+
+  if (url.pathname === "/hit" && req.method === "GET") {
+    json(res, bumpVisitor());
+    return;
+  }
+
   if (!existsSync(DIST)) {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("chat56k — run npm run build, then npm start\n");
@@ -54,6 +65,11 @@ function safeFile(pathname) {
   if (resolved !== DIST && !resolved.startsWith(root)) return null;
   if (existsSync(resolved) && statSync(resolved).isFile()) return resolved;
   return null;
+}
+
+function json(res, body) {
+  res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+  res.end(JSON.stringify(body));
 }
 
 function stream(res, file, type) {

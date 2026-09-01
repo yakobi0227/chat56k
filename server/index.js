@@ -2,7 +2,7 @@ import http from "node:http";
 import { randomBytes, randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { WebSocketServer, WebSocket } from "ws";
-import { dataFile, findRoomMeta, findUser, findUserByToken, loadStore, saveStore } from "./store.js";
+import { bumpSignOn, dataFile, findRoomMeta, findUser, findUserByToken, getStats, loadStore, saveStore } from "./store.js";
 import { servePublic } from "./static.js";
 import { handleGame, initGames, leaveTable, listTables } from "./games.js";
 
@@ -53,6 +53,7 @@ server.on("upgrade", (req, socket, head) => {
 });
 
 wss.on("connection", (ws) => {
+  send(ws, { type: "stats", ...getStats() });
   ws.on("message", (raw) => {
     let msg;
     try {
@@ -196,6 +197,7 @@ async function createAccount(ws, msg) {
     bio: "",
   });
   saveStore(db);
+  bumpSignOn();
   attach(ws, name);
 }
 
@@ -222,6 +224,7 @@ async function signOn(ws, msg) {
     });
     return;
   }
+  bumpSignOn();
   attach(ws, user.screenName);
 }
 
@@ -834,6 +837,7 @@ function bootstrap(session) {
     awayMessage: session.awayMessage,
     roomId: session.roomId,
     games: listTables(),
+    stats: getStats(),
   };
 }
 

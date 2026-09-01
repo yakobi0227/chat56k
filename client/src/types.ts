@@ -61,7 +61,9 @@ export type ClientEvent =
       awayMessage: string;
       roomId: string | null;
       games?: { id: string; kind: string; count: number; cap: number; status: string; names: string[] }[];
+      stats?: { visitors: number; signOns: number };
     }
+  | { type: "stats"; visitors: number; signOns: number }
   | { type: "rooms"; rooms: RoomSummary[] }
   | { type: "joined"; room: JoinedRoom }
   | {

@@ -541,6 +541,21 @@ textarea {
   box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
 }
 
+.hit-counter {
+  margin: 10px 0 4px;
+  padding: 6px 8px;
+  background: #000;
+  color: #39ff88;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #fff;
+}
+
+.hit-counter .hit-digits {
+  font-weight: 700;
+}
+
 .game-invite {
   display: flex;
   flex-wrap: wrap;

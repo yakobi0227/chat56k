@@ -17,6 +17,9 @@ const DATA_DIR =
   (existsSync(DISK) ? DISK : fileURLToPath(new URL(".", import.meta.url)));
 const FILE = join(DATA_DIR, "data.json");
 
+/** @type {ReturnType<typeof emptyData> | null} */
+let current = null;
+
 export function dataFile() {
   return FILE;
 }
@@ -32,12 +35,20 @@ export function emptyData() {
     })),
     reports: [],
     silenced: [],
+    stats: { visitors: 0, signOns: 0 },
   };
+}
+
+function ensureStats(data) {
+  if (!data.stats) data.stats = { visitors: 0, signOns: 0 };
+  if (typeof data.stats.visitors !== "number") data.stats.visitors = 0;
+  if (typeof data.stats.signOns !== "number") data.stats.signOns = 0;
 }
 
 export function loadStore() {
   if (!existsSync(FILE)) {
     const data = emptyData();
+    current = data;
     saveStore(data);
     return data;
   }
@@ -46,6 +57,7 @@ export function loadStore() {
   if (!Array.isArray(data.rooms)) data.rooms = [];
   if (!Array.isArray(data.reports)) data.reports = [];
   if (!Array.isArray(data.silenced)) data.silenced = [];
+  ensureStats(data);
   for (const house of HOUSE_ROOMS) {
     if (!data.rooms.some((r) => r.id === house.id)) {
       data.rooms.unshift({ ...house, house: true, createdBy: "chat56k", bans: [] });
@@ -59,7 +71,30 @@ export function loadStore() {
     if (!Array.isArray(user.mutes)) user.mutes = [];
     if (typeof user.bio !== "string") user.bio = "";
   }
+  current = data;
   return data;
+}
+
+export function getStats() {
+  if (!current) return { visitors: 0, signOns: 0 };
+  ensureStats(current);
+  return { visitors: current.stats.visitors, signOns: current.stats.signOns };
+}
+
+export function bumpVisitor() {
+  if (!current) return getStats();
+  ensureStats(current);
+  current.stats.visitors += 1;
+  saveStore(current);
+  return getStats();
+}
+
+export function bumpSignOn() {
+  if (!current) return getStats();
+  ensureStats(current);
+  current.stats.signOns += 1;
+  saveStore(current);
+  return getStats();
 }
 
 export function saveStore(data) {

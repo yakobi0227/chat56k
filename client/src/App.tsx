@@ -58,6 +58,7 @@ export default function App() {
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [profilePos, setProfilePos] = useState({ x: 300, y: 80, z: 8 });
   const [jar, setJar] = useState(false);
+  const [stats, setStats] = useState({ visitors: 0, signOns: 0 });
   const [gameInvite, setGameInvite] = useState<{ from: string; tableId: string; kind: string; names: string[] } | null>(
     null,
   );
@@ -68,6 +69,15 @@ export default function App() {
   mutesRef.current = mutes;
   const pendingSign = useRef<{ screenName: string; password: string } | null>(null);
   const restoreVault = useRef(false);
+
+  useEffect(() => {
+    fetch("/hit")
+      .then((r) => r.json())
+      .then((s) => {
+        if (s && typeof s.visitors === "number") setStats({ visitors: s.visitors, signOns: s.signOns || 0 });
+      })
+      .catch(() => {});
+  }, []);
 
   const send = useCallback((payload: object) => {
     const ws = wsRef.current;
@@ -159,6 +169,10 @@ export default function App() {
           setError(msg.message);
           return;
         }
+      if (msg.type === "stats") {
+        setStats({ visitors: msg.visitors, signOns: msg.signOns });
+        return;
+      }
       if (msg.type === "signed_on") {
         localStorage.setItem("chat56k.token", msg.token);
         localStorage.removeItem("chat99.token");
@@ -171,6 +185,7 @@ export default function App() {
         setAway(msg.away);
         setAwayMessage(msg.awayMessage || "I'm away.");
         if (msg.games) setGameTables(msg.games as TableInfo[]);
+        if (msg.stats) setStats(msg.stats);
         if (!msg.roomId) setRoom(null);
         const vault = loadVault();
         const same = vault && vault.screenName.toLowerCase() === msg.screenName.toLowerCase();
@@ -371,6 +386,8 @@ export default function App() {
           connected={connected}
           error={error}
           lastName={lastScreenName()}
+          visitors={stats.visitors}
+          signOns={stats.signOns}
           x={signPos.x}
           y={signPos.y}
           z={signPos.z}
@@ -708,7 +725,11 @@ export default function App() {
             </button>
           </>
         )}
-        <span style={{ marginLeft: "auto" }}>{screenName ? `${inRooms} in rooms` : "18+  ·  no email"}</span>
+        <span style={{ marginLeft: "auto" }}>
+          {stats.visitors ? `${stats.visitors} visits · ${stats.signOns} sign-ons` : ""}
+          {stats.visitors ? "  ·  " : ""}
+          {screenName ? `${inRooms} in rooms` : "18+  ·  no email"}
+        </span>
       </div>
     </div>
   );

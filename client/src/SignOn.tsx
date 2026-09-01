@@ -6,6 +6,8 @@ type Props = {
   connected: boolean;
   error: string;
   lastName: string;
+  visitors: number;
+  signOns: number;
   x: number;
   y: number;
   z: number;
@@ -20,6 +22,8 @@ export default function SignOn({
   connected,
   error,
   lastName,
+  visitors,
+  signOns,
   x,
   y,
   z,
@@ -40,7 +44,7 @@ export default function SignOn({
       x={x}
       y={y}
       w={460}
-      h={mode === "new" ? 500 : 360}
+      h={mode === "new" ? 540 : 400}
       z={z}
       onFocus={onFocus}
       onMove={onMove}
@@ -139,6 +143,12 @@ export default function SignOn({
             </>
           )}
           <div className="error-line">{error}</div>
+          <div className="hit-counter">
+            <div className="hit-digits">You are visitor {String(Math.max(0, visitors)).padStart(6, "0")}</div>
+            <div>
+              Visits {visitors} · Sign-ons {signOns}
+            </div>
+          </div>
           <div className="signon-actions">
             <button
               type="submit"
