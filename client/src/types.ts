@@ -58,6 +58,7 @@ export type ClientEvent =
       away: boolean;
       awayMessage: string;
       roomId: string | null;
+      games?: { id: string; kind: string; count: number; cap: number; status: string; names: string[] }[];
     }
   | { type: "rooms"; rooms: RoomSummary[] }
   | { type: "joined"; room: JoinedRoom }
@@ -76,4 +77,9 @@ export type ClientEvent =
   | { type: "kicked"; roomId: string; roomName: string; by: string }
   | { type: "banned"; roomId: string; roomName: string; by: string }
   | { type: "report_ok"; target: string }
-  | { type: "error"; code: string; message: string };
+  | { type: "error"; code: string; message: string }
+  | {
+      type: "game_tables";
+      tables: { id: string; kind: string; count: number; cap: number; status: string; names: string[] }[];
+    }
+  | { type: "game_state"; tableId: string; kind: string; [k: string]: unknown };

@@ -1,99 +1,46 @@
-import { useState } from "react";
+type Props = {
+  state: {
+    you: string;
+    started: boolean;
+    revealed: boolean;
+    q: number;
+    total: number;
+    status: string;
+    question: { q: string; a: string[]; c: number | null } | null;
+    players: { name: string; score?: number; pick: number | boolean | null }[];
+  };
+  onAction: (msg: object) => void;
+};
 
-const Q = [
-  {
-    q: "What did a 56k modem mostly sound like?",
-    a: ["A fax machine fighting a robot", "Dial tone forever", "Silence, if you were lucky", "Windows startup"],
-    c: 0,
-  },
-  {
-    q: "AOL Instant Messenger's running man was officially named…",
-    a: ["Buddy", "Running Man", "Triton", "Nobody told us and we didn't ask"],
-    c: 3,
-  },
-  {
-    q: "The legal limit of people in a classic AOL chat room was:",
-    a: ["16", "23", "50", "As many as the TOS ignored"],
-    c: 1,
-  },
-  {
-    q: "Which of these was a real way to get online in 1999?",
-    a: ["A CD in the mail", "5G", "The cloud", "Asking Siri"],
-    c: 0,
-  },
-  {
-    q: "Buffy the Vampire Slayer aired on:",
-    a: ["The WB", "HBO", "Netflix", "Whatever UPN meant"],
-    c: 0,
-  },
-  {
-    q: "Winamp's honest slogan was:",
-    a: ["It really whips the llama's ass", "Think different", "Just do it", "You've got mail"],
-    c: 0,
-  },
-  {
-    q: "a/s/l meant:",
-    a: ["Age / sex / location", "Always / stay / lurking", "A screen name list", "Ask someone later"],
-    c: 0,
-  },
-  {
-    q: "If someone picked up the house phone while you were online:",
-    a: ["You got knocked offline", "Nothing", "You got a faster connection", "AIM sent a warning"],
-    c: 0,
-  },
-  {
-    q: "Napster was mostly for:",
-    a: ["MP3s you did not own", "Photos", "Homework", "Antivirus"],
-    c: 0,
-  },
-  {
-    q: "The correct response to a 3-hour download failing at 99% was:",
-    a: ["Swear, try again at 11pm", "Call customer support", "Switch to fiber", "Tweet about it"],
-    c: 0,
-  },
-];
+export default function Trivia({ state, onAction }: Props) {
+  const you = state.players.find((p) => p.name === state.you);
+  const host = state.players[0]?.name === state.you;
+  const done = state.status === "over";
 
-export default function Trivia() {
-  const [i, setI] = useState(0);
-  const [score, setScore] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
-  const done = i >= Q.length;
-  const cur = Q[i];
-
-  function choose(n: number) {
-    if (picked !== null || !cur) return;
-    setPicked(n);
-    if (n === cur.c) setScore((s) => s + 1);
-  }
-
-  function next() {
-    setPicked(null);
-    setI((n) => n + 1);
-  }
-
-  if (done) {
+  if (!state.started) {
     return (
       <div className="game-pad">
-        <p className="game-score">
-          {score} / {Q.length}
-        </p>
-        <p className="hint">
-          {score >= 8
-            ? "You were there. You still have the CDs."
-            : score >= 5
-              ? "Lurker energy. Respectable."
-              : "You needed a 56k and a summer. Try again."}
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            setI(0);
-            setScore(0);
-            setPicked(null);
-          }}
-        >
-          Play again
+        <p className="hint">Up to 5. Host starts when at least two are seated.</p>
+        <p className="hint">Seated: {state.players.map((p) => p.name).join(", ")}</p>
+        <button type="button" disabled={!host || state.players.length < 2} onClick={() => onAction({ act: "start" })}>
+          Start trivia
         </button>
+      </div>
+    );
+  }
+
+  if (done || !state.question) {
+    return (
+      <div className="game-pad">
+        <p className="game-score">Final</p>
+        {state.players
+          .slice()
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .map((p) => (
+            <div key={p.name}>
+              {p.name}: {p.score || 0}
+            </div>
+          ))}
       </div>
     );
   }
@@ -101,26 +48,35 @@ export default function Trivia() {
   return (
     <div className="game-pad">
       <div className="caption">
-        Question {i + 1} of {Q.length} · score {score}
+        Q {state.q + 1}/{state.total} · {state.players.map((p) => `${p.name} ${p.score || 0}`).join(" · ")}
       </div>
-      <p className="game-q">{cur.q}</p>
+      <p className="game-q">{state.question.q}</p>
       <div className="game-choices">
-        {cur.a.map((t, n) => {
+        {state.question.a.map((t, n) => {
           let cls = "";
-          if (picked !== null) {
-            if (n === cur.c) cls = "right";
-            else if (n === picked) cls = "wrong";
-          }
+          if (state.revealed && state.question) {
+            if (n === state.question.c) cls = "right";
+            else if (you?.pick === n) cls = "wrong";
+          } else if (you?.pick === n) cls = "right";
           return (
-            <button key={t} type="button" className={cls} disabled={picked !== null} onClick={() => choose(n)}>
+            <button
+              key={t}
+              type="button"
+              className={cls}
+              disabled={state.revealed || you?.pick !== null}
+              onClick={() => onAction({ act: "pick", n })}
+            >
               {t}
             </button>
           );
         })}
       </div>
-      {picked !== null && (
-        <button type="button" onClick={next}>
-          {i === Q.length - 1 ? "See score" : "Next"}
+      <p className="hint">
+        {state.players.map((p) => `${p.name}: ${p.pick === null ? "…" : "locked"}`).join("  ")}
+      </p>
+      {state.revealed && host && (
+        <button type="button" onClick={() => onAction({ act: "next" })}>
+          Next
         </button>
       )}
     </div>

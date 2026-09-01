@@ -609,3 +609,46 @@ textarea {
 .card-face.cpu {
   color: #9c0000;
 }
+
+.poker-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.poker-seat {
+  background: #d4d0c8;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
+  padding: 6px;
+  min-width: 120px;
+  font-size: 11px;
+}
+
+.poker-seat.act {
+  outline: 2px solid #000080;
+}
+
+.poker-seat.folded {
+  opacity: 0.5;
+}
+
+.poker-cards {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.hole {
+  min-width: 36px;
+  padding: 4px 2px;
+}
+
+.hole.drop {
+  outline: 2px solid #9c0000;
+}
+
+.poker-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

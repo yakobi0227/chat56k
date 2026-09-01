@@ -3,7 +3,7 @@ import BfList from "./BfList";
 import Tagline from "./Tagline";
 import ChatRoom from "./ChatRoom";
 import Directory from "./Directory";
-import Games from "./Games";
+import Games, { type TableInfo } from "./Games";
 import GameTable from "./GameTable";
 import PrivateChat from "./PrivateChat";
 import SignOn from "./SignOn";
@@ -49,6 +49,8 @@ export default function App() {
   const [gamesOpen, setGamesOpen] = useState(false);
   const [gamesPos, setGamesPos] = useState({ x: 480, y: 40, z: 6 });
   const [tables, setTables] = useState<{ id: string; game: GameId; x: number; y: number; z: number }[]>([]);
+  const [gameTables, setGameTables] = useState<TableInfo[]>([]);
+  const [gameStates, setGameStates] = useState<Record<string, Record<string, unknown>>>({});
 
   const screenNameRef = useRef(screenName);
   screenNameRef.current = screenName;
@@ -134,6 +136,7 @@ export default function App() {
         setMutes(msg.mutes);
         setAway(msg.away);
         setAwayMessage(msg.awayMessage || "I'm away.");
+        if (msg.games) setGameTables(msg.games as TableInfo[]);
         if (!msg.roomId) setRoom(null);
         if (!screenNameRef.current) {
           setSelectedRoomId(msg.rooms[0]?.id ?? null);
@@ -218,6 +221,29 @@ export default function App() {
       if (msg.type === "report_ok") {
         setReportReason("");
         setNotice(`Report on ${msg.target} was filed.`);
+        return;
+      }
+      if (msg.type === "game_tables") {
+        setGameTables(msg.tables as TableInfo[]);
+        return;
+      }
+      if (msg.type === "game_state") {
+        const st = msg as Record<string, unknown>;
+        setGameStates((prev) => ({ ...prev, [msg.tableId]: st }));
+        setTables((prev) => {
+          if (prev.some((t) => t.id === msg.tableId)) return prev;
+          return [
+            ...prev,
+            {
+              id: msg.tableId,
+              game: msg.kind as GameId,
+              x: 140 + prev.length * 16,
+              y: 72 + prev.length * 16,
+              z: ++zCounter,
+            },
+          ];
+        });
+        setGamesOpen(true);
       }
       };
     }
@@ -400,24 +426,24 @@ export default function App() {
           x={gamesPos.x}
           y={gamesPos.y}
           z={gamesPos.z}
+          tables={gameTables}
           onFocus={() => {
             setFocus("games");
             setGamesPos((p) => ({ ...p, z: ++zCounter }));
           }}
           onMove={(x, y) => setGamesPos((p) => ({ ...p, x, y }))}
           onClose={() => setGamesOpen(false)}
-          onPlay={(game) => {
-            setTables((prev) => [
-              ...prev,
-              {
-                id: `${game}-${Date.now()}`,
-                game,
-                x: 120 + prev.length * 18,
-                y: 70 + prev.length * 18,
-                z: ++zCounter,
-              },
-            ]);
+          onCreate={(kind) => {
+            if (kind === "war") {
+              setTables((prev) => [
+                ...prev,
+                { id: `war-${Date.now()}`, game: "war", x: 120, y: 70, z: ++zCounter },
+              ]);
+              return;
+            }
+            send({ type: "create_game", kind });
           }}
+          onJoin={(id) => send({ type: "join_game", tableId: id })}
         />
       )}
 
@@ -426,6 +452,7 @@ export default function App() {
           key={t.id}
           id={t.id}
           game={t.game}
+          state={gameStates[t.id] ?? null}
           x={t.x}
           y={t.y}
           z={t.z}
@@ -434,7 +461,17 @@ export default function App() {
             setTables((prev) => prev.map((g) => (g.id === t.id ? { ...g, z: ++zCounter } : g)));
           }}
           onMove={(x, y) => setTables((prev) => prev.map((g) => (g.id === t.id ? { ...g, x, y } : g)))}
-          onClose={() => setTables((prev) => prev.filter((g) => g.id !== t.id))}
+          onClose={() => {
+            if (t.game !== "war") send({ type: "leave_game" });
+            setTables((prev) => prev.filter((g) => g.id !== t.id));
+            setGameStates((s) => {
+              const n = { ...s };
+              delete n[t.id];
+              return n;
+            });
+          }}
+          onInput={(x, y) => send({ type: "game_input", x, y })}
+          onAction={(msg) => send({ type: "game_action", ...msg })}
         />
       ))}
 
@@ -462,7 +499,13 @@ export default function App() {
         <div className="grip" />
         <span>{connected ? (screenName ? `Signed on as ${screenName}` : "Connected") : "Not connected"}</span>
         {screenName && (
-          <button type="button" onClick={() => setGamesOpen(true)}>
+          <button
+            type="button"
+            onClick={() => {
+              setGamesOpen(true);
+              send({ type: "list_games" });
+            }}
+          >
             Games
           </button>
         )}

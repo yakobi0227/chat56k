@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import { WebSocketServer, WebSocket } from "ws";
 import { findRoomMeta, findUser, findUserByToken, loadStore, saveStore } from "./store.js";
 import { servePublic } from "./static.js";
+import { handleGame, initGames, leaveTable, listTables } from "./games.js";
 
 const scryptAsync = promisify(scrypt);
 const PORT = Number(process.env.PORT) || 3999;
@@ -68,6 +69,7 @@ wss.on("connection", (ws) => {
 
 async function handle(ws, msg) {
   const session = sessions.get(ws);
+  if (session && handleGame(ws, session, msg)) return;
   switch (msg?.type) {
     case "create_account":
       return createAccount(ws, msg);
@@ -569,6 +571,7 @@ function disconnect(ws) {
   if (!session) return;
   sessions.delete(ws);
   if (session.replaced) return;
+  leaveTable(session);
   if (byName.get(session.screenName) === ws) byName.delete(session.screenName);
 
   const existing = ghosts.get(session.screenName);
@@ -690,6 +693,7 @@ function bootstrap(session) {
     away: session.away,
     awayMessage: session.awayMessage,
     roomId: session.roomId,
+    games: listTables(),
   };
 }
 
@@ -852,6 +856,14 @@ function needSignOn(ws) {
 function send(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
 }
+
+initGames({
+  send,
+  findByName,
+  everyone: (fn) => {
+    for (const ws of sessions.keys()) fn(ws);
+  },
+});
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`chat56k listening on 0.0.0.0:${PORT}`);
