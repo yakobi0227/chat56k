@@ -1,7 +1,6 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { hasPhoto, photoPath } from "./photos.js";
 
 const DIST = fileURLToPath(new URL("../client/dist", import.meta.url));
 
@@ -29,17 +28,6 @@ export function servePublic(req, res) {
   if (url.pathname === "/health") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("ok\n");
-    return;
-  }
-
-  if (url.pathname.startsWith("/photo/")) {
-    const name = decodeURIComponent(url.pathname.slice("/photo/".length).split("/")[0] || "");
-    if (hasPhoto(name)) {
-      stream(res, photoPath(name), "image/png");
-      return;
-    }
-    res.writeHead(404);
-    res.end();
     return;
   }
 

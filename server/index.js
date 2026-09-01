@@ -4,7 +4,6 @@ import { promisify } from "node:util";
 import { WebSocketServer, WebSocket } from "ws";
 import { findRoomMeta, findUser, findUserByToken, loadStore, saveStore } from "./store.js";
 import { servePublic } from "./static.js";
-import { clearPhoto, hasPhoto, photoStamp, savePhoto } from "./photos.js";
 import { handleGame, initGames, leaveTable, listTables } from "./games.js";
 
 const scryptAsync = promisify(scrypt);
@@ -132,9 +131,6 @@ async function handle(ws, msg) {
     case "set_profile":
       if (!session) return needSignOn(ws);
       return setProfile(ws, session, msg.bio);
-    case "set_photo":
-      if (!session) return needSignOn(ws);
-      return setPhoto(ws, session, msg.data);
     default:
       send(ws, { type: "error", code: "UNKNOWN", message: "Unknown request." });
   }
@@ -607,8 +603,6 @@ function getProfile(ws, screenName) {
     away: Boolean(liveSession?.away),
     awayMessage: liveSession?.awayMessage || "",
     signedOn: Boolean(liveSession),
-    photo: hasPhoto(user.screenName),
-    photoAt: photoStamp(user.screenName),
   });
 }
 
@@ -617,19 +611,6 @@ function setProfile(ws, session, bio) {
   if (!user) return;
   user.bio = cleanText(bio).slice(0, 200);
   saveStore(db);
-  getProfile(ws, session.screenName);
-}
-
-function setPhoto(ws, session, data) {
-  if (!data) {
-    clearPhoto(session.screenName);
-    getProfile(ws, session.screenName);
-    return;
-  }
-  if (!savePhoto(session.screenName, data)) {
-    send(ws, { type: "error", code: "BAD_PHOTO", message: "That picture didn't take. PNG, small, one shot." });
-    return;
-  }
   getProfile(ws, session.screenName);
 }
 

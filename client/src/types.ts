@@ -85,8 +85,6 @@ export type ClientEvent =
       away: boolean;
       awayMessage: string;
       signedOn: boolean;
-      photo: boolean;
-      photoAt: number;
     }
   | {
       type: "game_tables";

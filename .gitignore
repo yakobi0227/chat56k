@@ -6,4 +6,3 @@ client/dist
 .vite
 server/data.json
 server/data.json.tmp
-server/photos/*.png
