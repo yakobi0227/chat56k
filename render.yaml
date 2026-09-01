@@ -2,12 +2,16 @@ services:
   - type: web
     name: chat99
     runtime: node
-    plan: free
+    plan: starter
     region: oregon
     branch: main
     buildCommand: npm run build
     startCommand: node server/index.js
     healthCheckPath: /health
+    disk:
+      name: chat56k-data
+      mountPath: /var/data
+      sizeGB: 1
     domains:
       - chat56k.com
       - www.chat56k.com
@@ -16,3 +20,5 @@ services:
         value: production
       - key: NODE_VERSION
         value: "22"
+      - key: DATA_DIR
+        value: /var/data

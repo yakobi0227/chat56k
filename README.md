@@ -21,13 +21,13 @@ npm run build
 npm start
 ```
 
-Screen names live in `data.json`. Render's free disk forgets that file every deploy and when the box sleeps. To keep people:
+Screen names live in `data.json` on a Render disk.
 
-1. Render → your web service → **Disks** → add a disk, mount path `/var/data`.
-2. Starter plan (Free cannot keep a disk).
-3. Env var optional: `DATA_DIR=/var/data`.
+1. Instance type **Starter** (not Free).
+2. Service → **Disks** → Add disk. Mount path: `/var/data`. Size: 1 GB.
+3. Environment: `DATA_DIR=/var/data` (optional; the app uses `/var/data` if that folder exists).
 
-The app uses `/var/data` automatically if that folder exists. Until a disk is mounted, this browser will put your bio back after Sign On if the host forgot you.
+Adding the disk triggers a deploy. After that deploy is live, create your screen name once. It should survive the next push.
 
 ## Custom domain (chat56k.com)
 
