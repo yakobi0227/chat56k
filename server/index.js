@@ -14,6 +14,7 @@ const ROOM_NAME_RE = /^[A-Za-z][A-Za-z0-9 ]{2,23}$/;
 const MAX_MESSAGE = 400;
 const MAX_ROOMS_PER_USER = 8;
 const MAX_ROOMS = 200;
+const EMPTY_MS = 30 * 60 * 1000;
 
 const db = loadStore();
 
@@ -33,6 +34,8 @@ const byName = new Map();
 /** @type {Map<string, { timer: ReturnType<typeof setTimeout>, session: object }>} */
 const ghosts = new Map();
 const RESUME_MS = 20_000;
+/** @type {Map<string, ReturnType<typeof setTimeout>>} */
+const emptyTimers = new Map();
 
 const server = http.createServer((req, res) => {
   servePublic(req, res);
@@ -367,6 +370,7 @@ function joinRoom(ws, session, roomId) {
   emitRoom(room, entered, session.screenName);
   broadcastDirectory();
   send(ws, snapshot(room, session.screenName));
+  watchEmpty(room);
 }
 
 function leaveRoom(session, { announce }) {
@@ -392,6 +396,7 @@ function leaveRoom(session, { announce }) {
     emitRoom(room);
   }
   broadcastDirectory();
+  watchEmpty(room);
 }
 
 function say(ws, session, text) {
@@ -535,6 +540,7 @@ function kick(ws, session, screenName) {
   }
   announceRoom(room, `${target} has been removed from the room.`);
   broadcastDirectory();
+  watchEmpty(room);
 }
 
 function ban(ws, session, screenName) {
@@ -569,6 +575,7 @@ function ban(ws, session, screenName) {
   }
   announceRoom(room, `${name} is banned from this room.`);
   broadcastDirectory();
+  watchEmpty(room);
 }
 
 function unban(ws, session, screenName) {
@@ -933,6 +940,49 @@ function seatHost(room) {
   room.operator = owner || null;
 }
 
+function watchEmpty(room) {
+  if (!room || room.house) return;
+  const meta = findRoomMeta(db, room.id);
+  if (!meta || meta.house) return;
+  const pending = emptyTimers.get(room.id);
+  if (room.members.size > 0) {
+    if (pending) {
+      clearTimeout(pending);
+      emptyTimers.delete(room.id);
+    }
+    if (meta.emptiedAt) {
+      delete meta.emptiedAt;
+      saveStore(db);
+    }
+    return;
+  }
+  if (!meta.emptiedAt) {
+    meta.emptiedAt = Date.now();
+    saveStore(db);
+  }
+  if (pending) return;
+  const wait = Math.max(0, meta.emptiedAt + EMPTY_MS - Date.now());
+  emptyTimers.set(
+    room.id,
+    setTimeout(() => dropEmptyRoom(room.id), wait),
+  );
+}
+
+function dropEmptyRoom(id) {
+  emptyTimers.delete(id);
+  const room = rooms.get(id);
+  const meta = findRoomMeta(db, id);
+  if (!room || !meta || meta.house) return;
+  if (room.members.size > 0) {
+    watchEmpty(room);
+    return;
+  }
+  rooms.delete(id);
+  db.rooms = db.rooms.filter((r) => r.id !== id);
+  saveStore(db);
+  broadcastDirectory();
+}
+
 function oldestMember(room) {
   let pick = null;
   let ts = Infinity;
@@ -1021,6 +1071,8 @@ initGames({
     for (const ws of sessions.keys()) fn(ws);
   },
 });
+
+for (const room of rooms.values()) watchEmpty(room);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`chat56k listening on 0.0.0.0:${PORT}`);

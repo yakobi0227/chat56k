@@ -52,7 +52,10 @@ export default function Directory({
       onMove={onMove}
     >
       <div className="window-body pad">
-        <p className="hint">Public rooms. 23 seats. Double-click to enter. Make your own if you want a door with your name on it — you host that room.</p>
+        <p className="hint">
+          Public rooms. 23 seats. Double-click to enter. Make your own if you want a door with your name on it — you
+          host that room. Empty user rooms linger 30 minutes, then vanish. House rooms stay.
+        </p>
         <div className="directory">
           <div className="sunken" style={{ flex: 1 }}>
             <table className="room-table">
