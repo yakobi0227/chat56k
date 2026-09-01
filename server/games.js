@@ -79,11 +79,15 @@ const tables = new Map();
 let send = () => {};
 let findByName = () => null;
 let everyone = () => {};
+let isMuted = () => false;
+let dropPlayer = () => {};
 
 export function initGames(io) {
   send = io.send;
   findByName = io.findByName;
   everyone = io.everyone;
+  isMuted = io.isMuted || (() => false);
+  dropPlayer = io.dropPlayer || (() => {});
   setInterval(tickHockey, 40);
   setInterval(tickPool, 40);
 }
@@ -106,6 +110,15 @@ export function handleGame(ws, session, msg) {
     case "leave_game":
       leaveTable(session);
       return true;
+    case "invite_game":
+      inviteGame(ws, session, msg.screenName);
+      return true;
+    case "add_cpu":
+      addCpu(ws, session);
+      return true;
+    case "to_cpu":
+      humanToCpu(ws, session, msg.screenName);
+      return true;
     case "game_input":
       onInput(session, msg);
       return true;
@@ -123,13 +136,15 @@ export function leaveTable(session) {
   session.gameId = null;
   if (!t) return;
   t.players = t.players.filter((p) => p.name !== session.screenName);
-  if (t.players.length === 0) {
+  const humans = t.players.filter((p) => !p.cpu);
+  if (humans.length === 0) {
     tables.delete(t.id);
   } else {
     if (t.kind === "poker") resetPokerWaiting(t);
     if (t.kind === "hockey") resetHockey(t);
     if (t.kind === "pool") resetPool(t);
     emit(t);
+    think(t);
   }
   broadcastLobby();
 }
@@ -177,8 +192,106 @@ function joinTable(ws, session, tableId) {
   emit(t);
 }
 
+function inviteGame(ws, session, screenName) {
+  const t = tables.get(session.gameId);
+  if (!t) {
+    send(ws, { type: "error", code: "NO_TABLE", message: "Start or join a table first." });
+    return;
+  }
+  if (t.players.length >= CAP[t.kind]) {
+    send(ws, { type: "error", code: "TABLE_FULL", message: "That table is full." });
+    return;
+  }
+  const name = String(screenName || "").trim();
+  if (!name || name.toLowerCase() === session.screenName.toLowerCase()) return;
+  const targetWs = findByName(name);
+  if (!targetWs) {
+    send(ws, { type: "error", code: "NOT_ONLINE", message: `${name} is not signed on.` });
+    return;
+  }
+  if (isMuted(name, session.screenName)) {
+    send(ws, { type: "error", code: "MUTED", message: "They will not see that." });
+    return;
+  }
+  if (t.players.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+    send(ws, { type: "error", code: "ALREADY", message: "They are already at that table." });
+    return;
+  }
+  send(targetWs, {
+    type: "game_invite",
+    from: session.screenName,
+    tableId: t.id,
+    kind: t.kind,
+    names: t.players.map((p) => p.name),
+  });
+  send(ws, { type: "invite_ok", target: name, kind: t.kind });
+}
+
+function addCpu(ws, session) {
+  const t = tables.get(session.gameId);
+  if (!t) {
+    send(ws, { type: "error", code: "NO_TABLE", message: "Sit at a table first." });
+    return;
+  }
+  if (t.players.length >= CAP[t.kind]) {
+    send(ws, { type: "error", code: "TABLE_FULL", message: "That table is full." });
+    return;
+  }
+  const p = seatPlayer(nextCpuName(t), t.kind, t.players.length);
+  p.cpu = true;
+  t.players.push(p);
+  if (t.kind === "hockey" && t.players.length === 2) startHockey(t);
+  if (t.kind === "pool" && t.players.length === 2) startPool(t);
+  broadcastLobby();
+  emit(t);
+  think(t);
+}
+
+function humanToCpu(ws, session, screenName) {
+  const t = tables.get(session.gameId);
+  if (!t) return;
+  const host = t.players.find((p) => !p.cpu);
+  if (!host || host.name !== session.screenName) {
+    send(ws, { type: "error", code: "NOT_HOST", message: "The table host sits the CPU." });
+    return;
+  }
+  const p = t.players.find((x) => x.name.toLowerCase() === String(screenName || "").toLowerCase());
+  if (!p || p.cpu) return;
+  if (p.name === session.screenName) {
+    send(ws, { type: "error", code: "CPU_SELF", message: "Add a CPU to an empty chair instead." });
+    return;
+  }
+  const old = p.name;
+  const cpuName = nextCpuName(t);
+  dropPlayer(old);
+  const live = findByName(old);
+  if (live) send(live, { type: "game_boot", tableId: t.id, by: session.screenName });
+  if (t.scores && t.scores[old] != null) {
+    t.scores[cpuName] = t.scores[old];
+    delete t.scores[old];
+  }
+  if (t.turn === old) t.turn = cpuName;
+  if (t.toAct === old) t.toAct = cpuName;
+  if (t.shooter === old) t.shooter = cpuName;
+  p.name = cpuName;
+  p.cpu = true;
+  broadcastLobby();
+  emit(t);
+  think(t);
+}
+
+function nextCpuName(t) {
+  const taken = new Set(t.players.map((p) => p.name.toLowerCase()));
+  if (!taken.has("cpu")) return "CPU";
+  for (let i = 2; i < 12; i++) {
+    const n = `CPU${i}`;
+    if (!taken.has(n.toLowerCase())) return n;
+  }
+  return "CPUX";
+}
+
 function seatPlayer(name, kind, seat) {
-  const p = { name, seat };
+  const p = { name, seat, cpu: false };
   if (kind === "poker") {
     p.chips = START_CHIPS;
     p.cards = [];
@@ -266,6 +379,17 @@ function malletHit(mx, my, puck) {
 function tickHockey() {
   for (const t of tables.values()) {
     if (t.kind !== "hockey" || t.players.length < 2) continue;
+    for (const p of t.players) {
+      if (!p.cpu) continue;
+      const puck = t.puck;
+      const targetY = p.seat === 0 ? Math.max(HH * 0.58, Math.min(HH - MALLET, puck.y + 8)) : Math.min(HH * 0.42, Math.max(MALLET, puck.y - 8));
+      p.x += clamp(puck.x - p.x, -5.2, 5.2);
+      p.y += clamp(targetY - p.y, -5.2, 5.2);
+      p.x = clamp(p.x, MALLET, HW - MALLET);
+      p.y = clamp(p.y, MALLET, HH - MALLET);
+      if (p.seat === 0) p.y = Math.max(HH * 0.55, p.y);
+      else p.y = Math.min(HH * 0.45, p.y);
+    }
     if ((t.players[0].score || 0) >= 7 || (t.players[1].score || 0) >= 7) {
       if (t.status !== "over") {
         t.status = "over";
@@ -357,7 +481,11 @@ function poolShoot(t, p, msg) {
 function tickPool() {
   for (const t of tables.values()) {
     if (t.kind !== "pool" || !t.balls) continue;
-    if (!t.busy) continue;
+    if (t.players.length < 2) continue;
+    if (!t.busy) {
+      maybeCpuPool(t);
+      continue;
+    }
     const balls = t.balls;
     for (const b of balls) {
       if (b.dead) continue;
@@ -437,6 +565,7 @@ function triviaAct(t, p, msg) {
     t.status = "live";
     emit(t);
     broadcastLobby();
+    think(t);
     return;
   }
   if (msg.act === "pick" && t.started && !t.revealed) {
@@ -448,6 +577,7 @@ function triviaAct(t, p, msg) {
       t.revealed = true;
     }
     emit(t);
+    think(t);
     return;
   }
   if (msg.act === "next" && t.revealed && t.players[0].name === p.name) {
@@ -458,6 +588,7 @@ function triviaAct(t, p, msg) {
     });
     if (t.q >= TRIVIA.length) t.status = "over";
     emit(t);
+    think(t);
   }
 }
 
@@ -521,6 +652,7 @@ function pokerDeal(t, p) {
   t.status = "live";
   emit(t);
   broadcastLobby();
+  think(t);
 }
 
 function pokerBet(t, p, msg) {
@@ -561,6 +693,7 @@ function pokerBet(t, p, msg) {
     t.toAct = next.name;
   }
   emit(t);
+  think(t);
 }
 
 function pokerDraw(t, p, discard) {
@@ -582,6 +715,7 @@ function pokerDraw(t, p, discard) {
     t.toAct = nextLive(t, t.dealer)?.name;
   } else t.toAct = next.name;
   emit(t);
+  think(t);
 }
 
 function pokerShowdown(t) {
@@ -681,7 +815,8 @@ function summarize(t) {
     count: t.players.length,
     cap: CAP[t.kind],
     status: t.status,
-    names: t.players.map((p) => p.name),
+    names: t.players.map((p) => (p.cpu ? `${p.name}` : p.name)),
+    open: t.players.length < CAP[t.kind],
   };
 }
 
@@ -694,6 +829,7 @@ function publicState(t, viewer) {
     you: viewer,
     players: t.players.map((p) => ({
       name: p.name,
+      cpu: Boolean(p.cpu),
       seat: p.seat,
       score: p.score,
       chips: p.chips,
@@ -754,9 +890,69 @@ function publicState(t, viewer) {
 
 function emit(t) {
   for (const p of t.players) {
+    if (p.cpu) continue;
     const ws = findByName(p.name);
     if (ws) send(ws, publicState(t, p.name));
   }
+}
+
+function think(t) {
+  if (!t) return;
+  if (t.kind === "trivia") maybeCpuTrivia(t);
+  if (t.kind === "poker") maybeCpuPoker(t);
+  if (t.kind === "pool") maybeCpuPool(t);
+}
+
+function maybeCpuTrivia(t) {
+  if (!t.started || t.revealed || t.status === "over") return;
+  const cur = TRIVIA[t.q];
+  if (!cur) return;
+  for (const p of t.players) {
+    if (!p.cpu || p.pick !== null) continue;
+    const who = p;
+    setTimeout(() => {
+      if (!t.started || t.revealed || who.pick !== null) return;
+      who.pick = Math.random() < 0.55 ? cur.c : Math.floor(Math.random() * 4);
+      triviaAct(t, who, { act: "pick", n: who.pick });
+    }, 600 + Math.random() * 900);
+  }
+}
+
+function maybeCpuPoker(t) {
+  const p = t.players.find((x) => x.name === t.toAct);
+  if (!p?.cpu || t.cpuThink) return;
+  t.cpuThink = true;
+  setTimeout(() => {
+    t.cpuThink = false;
+    if (t.toAct !== p.name) return;
+    if (t.phase === "draw") {
+      pokerDraw(t, p, []);
+      return;
+    }
+    const need = t.currentBet - p.bet;
+    if (need > 0 && need > p.chips * 0.45) pokerBet(t, p, { act: "fold" });
+    else if (need > 0) pokerBet(t, p, { act: "call" });
+    else pokerBet(t, p, { act: "check" });
+  }, 450 + Math.random() * 500);
+}
+
+function maybeCpuPool(t) {
+  if (t.busy || t.cpuThink || t.players.length < 2) return;
+  const p = t.players.find((x) => x.name === t.turn);
+  if (!p?.cpu) return;
+  t.cpuThink = true;
+  setTimeout(() => {
+    t.cpuThink = false;
+    if (t.turn !== p.name || t.busy) return;
+    const cue = t.balls.find((b) => b.cue && !b.dead);
+    const live = t.balls.find((b) => !b.dead && !b.cue);
+    if (!cue || !live) return;
+    poolShoot(t, p, {
+      tx: live.x + (Math.random() - 0.5) * 10,
+      ty: live.y + (Math.random() - 0.5) * 10,
+      power: 6 + Math.random() * 3,
+    });
+  }, 500);
 }
 
 function broadcastLobby() {

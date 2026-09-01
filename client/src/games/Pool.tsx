@@ -112,7 +112,7 @@ export default function Pool({ state, onShoot }: Props) {
     <div className="game-pad center">
       <canvas ref={ref} width={state.w} height={state.h} className="game-canvas pool" />
       <p className="hint">
-        {state.players.length < 2 ? "Waiting for player 2." : "Aim, hold, release. Pocket 5."}
+        {state.players.length < 2 ? "Waiting for player 2. Invite or Add CPU." : "Aim, hold, release. Pocket 5."}
       </p>
     </div>
   );

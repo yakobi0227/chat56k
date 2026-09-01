@@ -26,7 +26,10 @@ export default function Games({ x, y, z, tables, onFocus, onMove, onClose, onCre
   return (
     <Win98Window title="Games — chat56k" x={x} y={y} w={400} h={480} z={z} onFocus={onFocus} onMove={onMove} onClose={onClose}>
       <div className="window-body pad">
-        <p className="hint">Open tables. Join or start a new one. War is still vs the house.</p>
+        <p className="hint">
+          Open tables — anyone signed on can Join. Invite someone from the table, or sit a CPU if nobody shows.
+          War is still vs the house.
+        </p>
         <div className="game-list">
           {GAMES.filter((g) => g.pvp).map((g) => (
             <div key={g.id} className="game-row">
@@ -70,7 +73,7 @@ export default function Games({ x, y, z, tables, onFocus, onMove, onClose, onCre
                   </div>
                 </div>
                 <button type="button" disabled={full} onClick={() => onJoin(t.id)}>
-                  {full ? "Full" : "Join"}
+                  {full ? "Full" : t.status === "live" ? "Sit" : "Join"}
                 </button>
               </div>
             );

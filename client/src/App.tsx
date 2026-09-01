@@ -10,7 +10,7 @@ import GameTable from "./GameTable";
 import PrivateChat from "./PrivateChat";
 import Profile, { type ProfileInfo } from "./Profile";
 import SignOn from "./SignOn";
-import type { GameId } from "./games/catalog";
+import { GAMES, type GameId } from "./games/catalog";
 import type { BfEntry, ClientEvent, ImMessage, JoinedRoom, RoomSummary } from "./types";
 import { hasAttest, lastScreenName, loadVault, rememberAttest, saveVault } from "./vault";
 
@@ -58,6 +58,9 @@ export default function App() {
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
   const [profilePos, setProfilePos] = useState({ x: 300, y: 80, z: 8 });
   const [jar, setJar] = useState(false);
+  const [gameInvite, setGameInvite] = useState<{ from: string; tableId: string; kind: string; names: string[] } | null>(
+    null,
+  );
 
   const screenNameRef = useRef(screenName);
   screenNameRef.current = screenName;
@@ -289,6 +292,24 @@ export default function App() {
       }
       if (msg.type === "game_tables") {
         setGameTables(msg.tables as TableInfo[]);
+        return;
+      }
+      if (msg.type === "game_invite") {
+        setGameInvite({ from: msg.from, tableId: msg.tableId, kind: msg.kind, names: msg.names });
+        return;
+      }
+      if (msg.type === "invite_ok") {
+        setNotice(`Invite sent to ${msg.target}.`);
+        return;
+      }
+      if (msg.type === "game_boot") {
+        setTables((prev) => prev.filter((t) => t.id !== msg.tableId));
+        setGameStates((s) => {
+          const n = { ...s };
+          delete n[msg.tableId];
+          return n;
+        });
+        setNotice(`${msg.by || "The host"} sat a CPU in your chair.`);
         return;
       }
       if (msg.type === "profile") {
@@ -540,6 +561,11 @@ export default function App() {
           key={t.id}
           id={t.id}
           game={t.game}
+          you={screenName || ""}
+          people={[
+            ...bfList.map((e) => e.screenName),
+            ...(room?.members.map((m) => m.name) ?? []),
+          ].filter((n, i, a) => n !== screenName && a.indexOf(n) === i)}
           state={gameStates[t.id] ?? null}
           x={t.x}
           y={t.y}
@@ -560,6 +586,9 @@ export default function App() {
           }}
           onInput={(x, y) => send({ type: "game_input", x, y })}
           onAction={(msg) => send({ type: "game_action", ...msg })}
+          onInvite={(name) => send({ type: "invite_game", screenName: name })}
+          onAddCpu={() => send({ type: "add_cpu" })}
+          onToCpu={(name) => send({ type: "to_cpu", screenName: name })}
         />
       ))}
 
@@ -581,6 +610,36 @@ export default function App() {
           onMute={(on) => send({ type: on ? "mute" : "unmute", screenName: profile.screenName })}
           onFlag={() => setFlagName(profile.screenName)}
         />
+      )}
+
+      {screenName && gameInvite && (
+        <div className="notice-modal">
+          <div className="window" style={{ width: 340 }}>
+            <div className="title-bar">
+              <div className="title-bar-text">Game invite</div>
+            </div>
+            <div className="window-body pad">
+              <p className="hint" style={{ marginBottom: 12 }}>
+                {gameInvite.from} wants you at {GAMES.find((g) => g.id === gameInvite.kind)?.name || gameInvite.kind}.
+                {gameInvite.names.length ? ` Seated: ${gameInvite.names.join(", ")}.` : ""}
+              </p>
+              <div className="signon-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    send({ type: "join_game", tableId: gameInvite.tableId });
+                    setGameInvite(null);
+                  }}
+                >
+                  Sit
+                </button>
+                <button type="button" onClick={() => setGameInvite(null)}>
+                  Nah
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {screenName && flagName && (

@@ -20,7 +20,7 @@ export default function Trivia({ state, onAction }: Props) {
   if (!state.started) {
     return (
       <div className="game-pad">
-        <p className="hint">Up to 5. Host starts when at least two are seated.</p>
+        <p className="hint">Up to 5. Host starts when at least two are seated. Invite or Add CPU.</p>
         <p className="hint">Seated: {state.players.map((p) => p.name).join(", ")}</p>
         <button type="button" disabled={!host || state.players.length < 2} onClick={() => onAction({ act: "start" })}>
           Start trivia

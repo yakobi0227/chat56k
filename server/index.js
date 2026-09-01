@@ -1068,6 +1068,12 @@ function send(ws, payload) {
 initGames({
   send,
   findByName,
+  isMuted,
+  dropPlayer(name) {
+    const ws = findByName(name);
+    const s = ws && sessions.get(ws);
+    if (s) s.gameId = null;
+  },
   everyone: (fn) => {
     for (const ws of sessions.keys()) fn(ws);
   },

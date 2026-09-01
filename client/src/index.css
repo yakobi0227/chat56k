@@ -541,6 +541,21 @@ textarea {
   box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
 }
 
+.game-invite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.game-invite input {
+  flex: 1;
+  min-width: 90px;
+  font-size: 12px;
+}
+
 .game-pad {
   display: flex;
   flex-direction: column;

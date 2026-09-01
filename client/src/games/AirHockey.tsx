@@ -73,7 +73,7 @@ export default function AirHockey({ state, onInput }: Props) {
   return (
     <div className="game-pad center">
       <canvas ref={ref} width={state.w} height={state.h} className="game-canvas" />
-      <p className="hint">{waiting ? "Waiting for player 2." : "Green is you. First to 7."}</p>
+      <p className="hint">{waiting ? "Waiting for player 2. Invite someone or Add CPU." : "Green is you. First to 7."}</p>
     </div>
   );
 }

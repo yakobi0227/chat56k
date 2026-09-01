@@ -77,7 +77,7 @@ export default function Poker({ state, onAction }: Props) {
       </div>
       <p className="hint">
         {state.players.length < 2
-          ? "Need 2–5. New joiners start at 1500. Bust or leave and the next game is 1500 again."
+          ? "Need 2–5. Invite, Join from Games, or Add CPU. New joiners start at 1500."
           : myTurn
             ? state.phase === "draw"
               ? "Click cards to dump, then Draw."

@@ -81,6 +81,15 @@ export type ClientEvent =
   | { type: "kicked"; roomId: string; roomName: string; by: string }
   | { type: "banned"; roomId: string; roomName: string; by: string }
   | { type: "report_ok"; target: string; reason?: string }
+  | { type: "invite_ok"; target: string; kind?: string }
+  | {
+      type: "game_invite";
+      from: string;
+      tableId: string;
+      kind: string;
+      names: string[];
+    }
+  | { type: "game_boot"; tableId: string; by?: string }
   | { type: "error"; code: string; message: string }
   | {
       type: "profile";
