@@ -53,7 +53,7 @@ textarea {
   transform: translate(-50%, -50%);
   width: min(520px, 56vw);
   height: auto;
-  opacity: 0.22;
+  opacity: 0.28;
   pointer-events: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -142,8 +142,6 @@ textarea {
   flex: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  background: #008080;
-  box-shadow: inset -1px -1px #fff, inset 1px 1px #404040;
 }
 
 .signon-hero h1 {
