@@ -64,14 +64,15 @@ export default function ChatRoom({
   }, [room.messages]);
 
   const peer = selectedMember && selectedMember !== you ? selectedMember : null;
-  const isOp = room.operator === you;
+  const isOp = room.house ? room.operator === you : room.createdBy.toLowerCase() === you.toLowerCase();
+  const hostName = room.house ? room.operator ?? "—" : room.createdBy;
   const muted = peer ? mutes.some((n) => n.toLowerCase() === peer.toLowerCase()) : false;
   const quiet = room.silenced ?? [];
   const peerQuiet = peer ? quiet.some((n) => n.toLowerCase() === peer.toLowerCase()) : false;
 
   return (
     <Win98Window
-      title={`${room.name} — ${room.members.length}/${room.cap}${isOp ? " — operator" : ""}`}
+      title={`${room.name} — ${room.members.length}/${room.cap}${isOp ? (room.house ? " — operator" : " — host") : ""}`}
       x={x}
       y={y}
       w={680}
@@ -83,7 +84,7 @@ export default function ChatRoom({
     >
       <div className="window-body pad">
         <div className="caption">
-          {room.blurb} Host: {room.operator ?? "—"}. Double-click a name for private chat.
+          {room.blurb} Host: {hostName}. Double-click a name for private chat.
           {isOp ? " Perm mute: they stay, nobody else sees their lines." : ""}
         </div>
         <div className="room-layout">
@@ -200,9 +201,11 @@ export default function ChatRoom({
                   <button type="button" disabled={!peer} onClick={() => peer && onSilence(peer, !peerQuiet)}>
                     {peerQuiet ? "Unsilence" : "Perm mute"}
                   </button>
-                  <button type="button" disabled={!peer} onClick={() => peer && onPass(peer)}>
-                    Pass
-                  </button>
+                  {room.house && (
+                    <button type="button" disabled={!peer} onClick={() => peer && onPass(peer)}>
+                      Pass
+                    </button>
+                  )}
                 </>
               )}
             </div>

@@ -175,8 +175,8 @@ export default function App() {
                 ...prev,
                 members: msg.members,
                 operator: msg.operator,
-                bans: msg.operator === prev.you ? msg.bans : [],
-                silenced: msg.operator === prev.you ? msg.silenced ?? [] : [],
+                bans: msg.operator === prev.you || prev.createdBy === prev.you ? msg.bans : [],
+                silenced: msg.operator === prev.you || prev.createdBy === prev.you ? msg.silenced ?? [] : [],
                 messages: [...prev.messages, msg.message].slice(-200),
               }
             : prev,
@@ -190,8 +190,8 @@ export default function App() {
                 ...prev,
                 members: msg.members,
                 operator: msg.operator,
-                bans: msg.operator === prev.you ? msg.bans : [],
-                silenced: msg.operator === prev.you ? msg.silenced ?? [] : [],
+                bans: msg.operator === prev.you || prev.createdBy === prev.you ? msg.bans : [],
+                silenced: msg.operator === prev.you || prev.createdBy === prev.you ? msg.silenced ?? [] : [],
               }
             : prev,
         );

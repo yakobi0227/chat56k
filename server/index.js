@@ -336,9 +336,13 @@ function joinRoom(ws, session, roomId) {
     send(ws, { type: "error", code: "NO_ROOM", message: "That room is not on the directory." });
     return;
   }
-  if (isBanned(meta, session.screenName)) {
+  if (isBanned(meta, session.screenName) && !sameName(meta.createdBy, session.screenName)) {
     send(ws, { type: "error", code: "BANNED", message: "You are not allowed in that room." });
     return;
+  }
+  if (sameName(meta.createdBy, session.screenName) && isBanned(meta, session.screenName)) {
+    meta.bans = meta.bans.filter((n) => !sameName(n, session.screenName));
+    saveStore(db);
   }
   if (session.roomId === room.id) {
     send(ws, snapshot(room, session.screenName));
@@ -352,7 +356,11 @@ function joinRoom(ws, session, roomId) {
 
   room.members.set(session.screenName, Date.now());
   session.roomId = room.id;
-  if (!room.operator) room.operator = session.screenName;
+  if (room.house) {
+    if (!room.operator) room.operator = session.screenName;
+  } else {
+    seatHost(room);
+  }
 
   const entered = systemLine(`${session.screenName} has entered the room.`);
   pushMessage(room, entered);
@@ -368,12 +376,16 @@ function leaveRoom(session, { announce }) {
   if (!room) return;
 
   room.members.delete(session.screenName);
-  if (room.operator === session.screenName) {
-    room.operator = oldestMember(room);
+  if (room.house) {
+    if (room.operator === session.screenName) {
+      room.operator = oldestMember(room);
+    }
+  } else {
+    seatHost(room);
   }
   if (announce) {
     announceRoom(room, `${session.screenName} has left the room.`);
-    if (room.operator && room.members.size > 0) {
+    if (room.house && room.operator && room.members.size > 0) {
       announceRoom(room, `${room.operator} is now the room operator.`);
     }
   } else {
@@ -508,12 +520,17 @@ function kick(ws, session, screenName) {
     send(ws, { type: "error", code: "KICK_SELF", message: "You cannot kick yourself. Leave the room." });
     return;
   }
+  if (!room.house && sameName(room.createdBy, target)) {
+    send(ws, { type: "error", code: "HOST", message: "You cannot kick the room creator." });
+    return;
+  }
   const targetWs = byName.get(target);
   const targetSession = targetWs ? sessions.get(targetWs) : null;
   if (targetSession) {
     targetSession.roomId = null;
     room.members.delete(target);
-    if (room.operator === target) room.operator = session.screenName;
+    if (room.house && room.operator === target) room.operator = session.screenName;
+    else seatHost(room);
     send(targetWs, { type: "kicked", roomId: room.id, roomName: room.name, by: session.screenName });
   }
   announceRoom(room, `${target} has been removed from the room.`);
@@ -530,6 +547,10 @@ function ban(ws, session, screenName) {
     send(ws, { type: "error", code: "BAN_SELF", message: "You cannot ban yourself." });
     return;
   }
+  if (!room.house && sameName(room.createdBy, name)) {
+    send(ws, { type: "error", code: "HOST", message: "You cannot ban the room creator." });
+    return;
+  }
   if (!meta.bans.some((n) => n.toLowerCase() === name.toLowerCase())) {
     meta.bans.push(name);
     saveStore(db);
@@ -539,7 +560,8 @@ function ban(ws, session, screenName) {
     const targetWs = byName.get(target);
     const targetSession = targetWs ? sessions.get(targetWs) : null;
     room.members.delete(target);
-    if (room.operator === target) room.operator = session.screenName;
+    if (room.house && room.operator === target) room.operator = session.screenName;
+    else seatHost(room);
     if (targetSession) {
       targetSession.roomId = null;
       send(targetWs, { type: "banned", roomId: room.id, roomName: room.name, by: session.screenName });
@@ -580,6 +602,14 @@ function silenceSn(ws, session, screenName, on) {
 function passOp(ws, session, screenName) {
   const room = requireOp(ws, session);
   if (!room) return;
+  if (!room.house) {
+    send(ws, {
+      type: "error",
+      code: "HOST",
+      message: "User rooms stay with the person who created them.",
+    });
+    return;
+  }
   const target = inRoom(room, screenName);
   if (!target) {
     send(ws, { type: "error", code: "NOT_HERE", message: "Pass the operator to someone in this room." });
@@ -676,8 +706,12 @@ function requireOp(ws, session) {
     send(ws, { type: "error", code: "NOT_IN_ROOM", message: "Join a room first." });
     return null;
   }
-  if (room.operator !== session.screenName) {
-    send(ws, { type: "error", code: "NOT_OP", message: "Only the room operator can do that." });
+  if (!isHost(room, session.screenName)) {
+    send(ws, {
+      type: "error",
+      code: "NOT_OP",
+      message: room.house ? "Only the room operator can do that." : "Only the room creator can do that.",
+    });
     return null;
   }
   return room;
@@ -685,7 +719,7 @@ function requireOp(ws, session) {
 
 function snapshot(room, you) {
   const meta = findRoomMeta(db, room.id);
-  const isOp = room.operator === you;
+  const isOp = isHost(room, you);
   return {
     type: "joined",
     room: {
@@ -741,12 +775,12 @@ function emitRoom(room, incoming, except = null) {
 }
 
 function opBans(room, name) {
-  if (room.operator !== name) return [];
+  if (!isHost(room, name)) return [];
   return findRoomMeta(db, room.id)?.bans ?? [];
 }
 
 function opSilenced(room, name) {
-  if (room.operator !== name) return [];
+  if (!isHost(room, name)) return [];
   return db.silenced ?? [];
 }
 
@@ -757,7 +791,7 @@ function memberList(room) {
       const session = sessions.get(byName.get(name));
       return {
         name,
-        op: room.operator === name,
+        op: isHost(room, name),
         away: Boolean(session?.away),
       };
     });
@@ -882,6 +916,21 @@ function inRoom(room, screenName) {
     if (name.toLowerCase() === key) return name;
   }
   return null;
+}
+
+function sameName(a, b) {
+  return String(a || "").toLowerCase() === String(b || "").toLowerCase();
+}
+
+function isHost(room, name) {
+  if (room.house) return sameName(room.operator, name);
+  return sameName(room.createdBy, name);
+}
+
+function seatHost(room) {
+  if (room.house) return;
+  const owner = [...room.members.keys()].find((n) => sameName(n, room.createdBy));
+  room.operator = owner || null;
 }
 
 function oldestMember(room) {
