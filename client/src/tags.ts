@@ -6,4 +6,5 @@ export const TAGS = [
   "Back to an era when things didn't suck.",
   "Where anybody could be anybody and everyone just went with it.",
   "I'm counting on someone to create a Buffy the Vampire Slayer RP room.",
+  "When internet was mailed to you on a CD.",
 ];
