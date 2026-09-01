@@ -524,3 +524,88 @@ textarea {
 .notice-modal p {
   user-select: text;
 }
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #d4d0c8;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
+}
+
+.game-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  flex: 1;
+}
+
+.game-pad.center {
+  align-items: center;
+}
+
+.game-q {
+  font-size: 13px;
+  margin: 0;
+}
+
+.game-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-choices button.right {
+  outline: 2px solid #008000;
+}
+
+.game-choices button.wrong {
+  outline: 2px solid #9c0000;
+}
+
+.game-score {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.game-canvas {
+  image-rendering: pixelated;
+  background: #000;
+  cursor: crosshair;
+}
+
+.war-row {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.war-pile {
+  text-align: center;
+}
+
+.card-face {
+  width: 72px;
+  height: 96px;
+  background: #fff;
+  border: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.card-face.cpu {
+  color: #9c0000;
+}

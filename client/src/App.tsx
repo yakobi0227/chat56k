@@ -3,8 +3,11 @@ import BfList from "./BfList";
 import Tagline from "./Tagline";
 import ChatRoom from "./ChatRoom";
 import Directory from "./Directory";
+import Games from "./Games";
+import GameTable from "./GameTable";
 import PrivateChat from "./PrivateChat";
 import SignOn from "./SignOn";
+import type { GameId } from "./games/catalog";
 import type { BfEntry, ClientEvent, ImMessage, JoinedRoom, RoomSummary } from "./types";
 
 type ImThread = {
@@ -43,6 +46,9 @@ export default function App() {
   const [bfPos, setBfPos] = useState({ x: 16, y: 16, z: 3 });
   const [dirPos, setDirPos] = useState({ x: 258, y: 16, z: 4 });
   const [roomPos, setRoomPos] = useState({ x: 200, y: 40, z: 5 });
+  const [gamesOpen, setGamesOpen] = useState(false);
+  const [gamesPos, setGamesPos] = useState({ x: 480, y: 40, z: 6 });
+  const [tables, setTables] = useState<{ id: string; game: GameId; x: number; y: number; z: number }[]>([]);
 
   const screenNameRef = useRef(screenName);
   screenNameRef.current = screenName;
@@ -389,6 +395,49 @@ export default function App() {
           />
         ))}
 
+      {screenName && gamesOpen && (
+        <Games
+          x={gamesPos.x}
+          y={gamesPos.y}
+          z={gamesPos.z}
+          onFocus={() => {
+            setFocus("games");
+            setGamesPos((p) => ({ ...p, z: ++zCounter }));
+          }}
+          onMove={(x, y) => setGamesPos((p) => ({ ...p, x, y }))}
+          onClose={() => setGamesOpen(false)}
+          onPlay={(game) => {
+            setTables((prev) => [
+              ...prev,
+              {
+                id: `${game}-${Date.now()}`,
+                game,
+                x: 120 + prev.length * 18,
+                y: 70 + prev.length * 18,
+                z: ++zCounter,
+              },
+            ]);
+          }}
+        />
+      )}
+
+      {tables.map((t) => (
+        <GameTable
+          key={t.id}
+          id={t.id}
+          game={t.game}
+          x={t.x}
+          y={t.y}
+          z={t.z}
+          onFocus={() => {
+            setFocus(t.id);
+            setTables((prev) => prev.map((g) => (g.id === t.id ? { ...g, z: ++zCounter } : g)));
+          }}
+          onMove={(x, y) => setTables((prev) => prev.map((g) => (g.id === t.id ? { ...g, x, y } : g)))}
+          onClose={() => setTables((prev) => prev.filter((g) => g.id !== t.id))}
+        />
+      ))}
+
       {notice && (
         <div className="notice-modal">
           <div className="window" style={{ width: 320 }}>
@@ -412,6 +461,11 @@ export default function App() {
       <div className="status-bar">
         <div className="grip" />
         <span>{connected ? (screenName ? `Signed on as ${screenName}` : "Connected") : "Not connected"}</span>
+        {screenName && (
+          <button type="button" onClick={() => setGamesOpen(true)}>
+            Games
+          </button>
+        )}
         <span style={{ marginLeft: "auto" }}>{screenName ? `${inRooms} in rooms` : "18+  ·  no email"}</span>
       </div>
     </div>
