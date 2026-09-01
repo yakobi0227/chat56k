@@ -433,9 +433,13 @@ textarea {
   box-shadow: none;
 }
 
-.sn-menu button:hover {
+.sn-menu button:hover:not(:disabled) {
   background: #000080;
   color: #fff;
+}
+
+.sn-menu button:disabled {
+  color: #808080;
 }
 
 .sn-menu-rule {

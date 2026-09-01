@@ -263,44 +263,40 @@ function SnMenu({
       <button type="button" onClick={() => go(() => onInfo(name))}>
         Get Info
       </button>
-      {!mine && (
+      <button type="button" disabled={mine} onClick={() => go(() => onPrivate(name))}>
+        Private Message
+      </button>
+      <button type="button" disabled={mine} onClick={() => go(() => onAddBf(name))}>
+        Add to BF List
+      </button>
+      <button type="button" disabled={mine} onClick={() => go(() => onMute(name, !muted))}>
+        {muted ? "Unmute" : "Mute"}
+      </button>
+      <button type="button" disabled={mine} onClick={() => go(() => onFlag(name))}>
+        Report / Flag
+      </button>
+      {isOp && !mine && (
         <>
-          <button type="button" onClick={() => go(() => onPrivate(name))}>
-            Private chat
+          <div className="sn-menu-rule" />
+          <button type="button" onClick={() => go(() => onKick(name))}>
+            Kick
           </button>
-          <button type="button" onClick={() => go(() => onAddBf(name))}>
-            Add to BF List
+          {banned ? (
+            <button type="button" onClick={() => go(() => onUnban(name))}>
+              Unban
+            </button>
+          ) : (
+            <button type="button" onClick={() => go(() => onBan(name))}>
+              Ban
+            </button>
+          )}
+          <button type="button" onClick={() => go(() => onSilence(name, !quiet))}>
+            {quiet ? "Unsilence" : "Perm mute"}
           </button>
-          <button type="button" onClick={() => go(() => onMute(name, !muted))}>
-            {muted ? "Unmute" : "Mute"}
-          </button>
-          <button type="button" onClick={() => go(() => onFlag(name))}>
-            Flag
-          </button>
-          {isOp && (
-            <>
-              <div className="sn-menu-rule" />
-              <button type="button" onClick={() => go(() => onKick(name))}>
-                Kick
-              </button>
-              {banned ? (
-                <button type="button" onClick={() => go(() => onUnban(name))}>
-                  Unban
-                </button>
-              ) : (
-                <button type="button" onClick={() => go(() => onBan(name))}>
-                  Ban
-                </button>
-              )}
-              <button type="button" onClick={() => go(() => onSilence(name, !quiet))}>
-                {quiet ? "Unsilence" : "Perm mute"}
-              </button>
-              {house && (
-                <button type="button" onClick={() => go(() => onPass(name))}>
-                  Pass operator
-                </button>
-              )}
-            </>
+          {house && (
+            <button type="button" onClick={() => go(() => onPass(name))}>
+              Pass operator
+            </button>
           )}
         </>
       )}
