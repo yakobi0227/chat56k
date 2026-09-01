@@ -52,12 +52,9 @@ export default function SignOn({
       <div className="window-body pad">
         <div className="signon-hero">
           <img className="signon-logo" src="/logo.png" alt="Chat56k" width={88} height={88} />
-          <div>
-            <h1>chat56k</h1>
-            <p>
-              <Tagline />
-            </p>
-          </div>
+          <p>
+            <Tagline />
+          </p>
         </div>
         <div className="tabs">
           <button

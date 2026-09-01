@@ -162,17 +162,10 @@ textarea {
   image-rendering: crisp-edges;
 }
 
-.signon-hero h1 {
-  font-size: 22px;
-  margin: 0;
-  font-family: "Arial Black", Impact, sans-serif;
-  letter-spacing: 0.5px;
-  color: var(--signal);
-}
-
 .signon-hero p {
-  margin: 2px 0 0;
-  font-size: 11px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
   color: #c8ebe6;
 }
 
