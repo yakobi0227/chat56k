@@ -370,10 +370,21 @@ textarea {
   grid-column: 1 / -1;
   display: flex;
   gap: 6px;
-  align-items: stretch;
+  align-items: center;
 }
 
-.compose textarea,
+.compose textarea {
+  flex: 1;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  resize: none;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  padding: 4px;
+  user-select: text;
+}
+
 .im-compose textarea {
   flex: 1;
   resize: none;
@@ -390,6 +401,41 @@ textarea {
   min-width: 72px;
 }
 
+.sn-menu {
+  position: fixed;
+  z-index: 2000;
+  min-width: 150px;
+  padding: 2px;
+  background: #c0c0c0;
+  box-shadow:
+    inset 1px 1px #fff,
+    inset -1px -1px #808080,
+    2px 2px 0 #000;
+}
+
+.sn-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 3px 12px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sn-menu button:hover {
+  background: #000080;
+  color: #fff;
+}
+
+.sn-menu-rule {
+  height: 1px;
+  margin: 3px 4px;
+  background: #808080;
+  box-shadow: 0 1px 0 #fff;
+}
+
 .line-system {
   color: var(--system);
   font-style: italic;
@@ -398,6 +444,7 @@ textarea {
 .line-chat .who {
   color: var(--name-blue);
   font-weight: 700;
+  cursor: pointer;
 }
 
 .caption {
