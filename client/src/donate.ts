@@ -1,2 +1,2 @@
-/** PayPal, Ko-fi, Venmo, whatever the jar is. */
-export const DONATE_URL = "https://ko-fi.com/chat56k";
+export const DONATE_URL =
+  "https://www.paypal.com/donate/?business=yacobiquaife%40gmail.com&currency_code=USD";
