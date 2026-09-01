@@ -6,6 +6,7 @@ import Directory from "./Directory";
 import Games, { type TableInfo } from "./Games";
 import GameTable from "./GameTable";
 import PrivateChat from "./PrivateChat";
+import Profile, { type ProfileInfo } from "./Profile";
 import SignOn from "./SignOn";
 import type { GameId } from "./games/catalog";
 import type { BfEntry, ClientEvent, ImMessage, JoinedRoom, RoomSummary } from "./types";
@@ -51,6 +52,8 @@ export default function App() {
   const [tables, setTables] = useState<{ id: string; game: GameId; x: number; y: number; z: number }[]>([]);
   const [gameTables, setGameTables] = useState<TableInfo[]>([]);
   const [gameStates, setGameStates] = useState<Record<string, Record<string, unknown>>>({});
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [profilePos, setProfilePos] = useState({ x: 300, y: 80, z: 8 });
 
   const screenNameRef = useRef(screenName);
   screenNameRef.current = screenName;
@@ -227,6 +230,17 @@ export default function App() {
         setGameTables(msg.tables as TableInfo[]);
         return;
       }
+      if (msg.type === "profile") {
+        setProfile({
+          screenName: msg.screenName,
+          bio: msg.bio,
+          away: msg.away,
+          awayMessage: msg.awayMessage,
+          signedOn: msg.signedOn,
+        });
+        setProfilePos((p) => ({ ...p, z: ++zCounter }));
+        return;
+      }
       if (msg.type === "game_state") {
         const st = msg as Record<string, unknown>;
         setGameStates((prev) => ({ ...prev, [msg.tableId]: st }));
@@ -315,6 +329,7 @@ export default function App() {
             }}
             onRemove={(name) => send({ type: "remove_bf", screenName: name })}
             onOpen={(name) => openPrivate(name)}
+            onInfo={(name) => send({ type: "get_profile", screenName: name })}
             onAway={(next, message) => send({ type: "set_away", away: next, message })}
             onAwayMessage={setAwayMessage}
           />
@@ -373,6 +388,7 @@ export default function App() {
           }}
           onSelectMember={setSelectedMember}
           onPrivate={(name) => openPrivate(name)}
+          onInfo={(name) => send({ type: "get_profile", screenName: name })}
           onDraft={setDraft}
           onSay={(e) => {
             e.preventDefault();
@@ -475,6 +491,20 @@ export default function App() {
         />
       ))}
 
+      {screenName && profile && (
+        <Profile
+          you={screenName}
+          profile={profile}
+          x={profilePos.x}
+          y={profilePos.y}
+          z={profilePos.z}
+          onFocus={() => setProfilePos((p) => ({ ...p, z: ++zCounter }))}
+          onMove={(x, y) => setProfilePos((p) => ({ ...p, x, y }))}
+          onClose={() => setProfile(null)}
+          onSave={(bio) => send({ type: "set_profile", bio })}
+        />
+      )}
+
       {notice && (
         <div className="notice-modal">
           <div className="window" style={{ width: 320 }}>
@@ -499,15 +529,23 @@ export default function App() {
         <div className="grip" />
         <span>{connected ? (screenName ? `Signed on as ${screenName}` : "Connected") : "Not connected"}</span>
         {screenName && (
-          <button
-            type="button"
-            onClick={() => {
-              setGamesOpen(true);
-              send({ type: "list_games" });
-            }}
-          >
-            Games
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => send({ type: "get_profile", screenName })}
+            >
+              Profile
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setGamesOpen(true);
+                send({ type: "list_games" });
+              }}
+            >
+              Games
+            </button>
+          </>
         )}
         <span style={{ marginLeft: "auto" }}>{screenName ? `${inRooms} in rooms` : "18+  ·  no email"}</span>
       </div>

@@ -79,6 +79,14 @@ export type ClientEvent =
   | { type: "report_ok"; target: string }
   | { type: "error"; code: string; message: string }
   | {
+      type: "profile";
+      screenName: string;
+      bio: string;
+      away: boolean;
+      awayMessage: string;
+      signedOn: boolean;
+    }
+  | {
       type: "game_tables";
       tables: { id: string; kind: string; count: number; cap: number; status: string; names: string[] }[];
     }

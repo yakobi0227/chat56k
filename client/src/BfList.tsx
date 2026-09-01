@@ -17,6 +17,7 @@ type Props = {
   onAdd: () => void;
   onRemove: (name: string) => void;
   onOpen: (name: string) => void;
+  onInfo: (name: string) => void;
   onAway: (away: boolean, message: string) => void;
   onAwayMessage: (value: string) => void;
 };
@@ -43,13 +44,14 @@ export default function BfList({
   onAdd,
   onRemove,
   onOpen,
+  onInfo,
   onAway,
   onAwayMessage,
 }: Props) {
   return (
     <Win98Window title={`BF List — ${you}`} x={x} y={y} w={230} h={460} z={z} onFocus={onFocus} onMove={onMove}>
       <div className="window-body pad">
-        <p className="hint">Double-click a name for private chat.</p>
+        <p className="hint">Double-click to IM. i = Get Info.</p>
         <div className="sunken bf-list">
           {GROUPS.map((g) => {
             const rows = list.filter((e) => e.status === g.key);
@@ -67,6 +69,9 @@ export default function BfList({
                   >
                     <span className="bf-dot" />
                     <span className="bf-name">{e.screenName}</span>
+                    <button type="button" className="tiny" onClick={() => onInfo(e.screenName)}>
+                      i
+                    </button>
                     <button type="button" className="tiny" onClick={() => onRemove(e.screenName)}>
                       ×
                     </button>

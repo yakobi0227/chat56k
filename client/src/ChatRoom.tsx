@@ -18,6 +18,7 @@ type Props = {
   onClose: () => void;
   onSelectMember: (name: string) => void;
   onPrivate: (name: string) => void;
+  onInfo: (name: string) => void;
   onDraft: (text: string) => void;
   onSay: (e: React.FormEvent) => void;
   onAddBf: (name: string) => void;
@@ -46,6 +47,7 @@ export default function ChatRoom({
   onClose,
   onSelectMember,
   onPrivate,
+  onInfo,
   onDraft,
   onSay,
   onAddBf,
@@ -142,6 +144,12 @@ export default function ChatRoom({
               <button type="submit">Send</button>
               <button type="button" disabled={!peer} onClick={() => peer && onPrivate(peer)}>
                 Private
+              </button>
+              <button
+                type="button"
+                onClick={() => onInfo(selectedMember || you)}
+              >
+                Info
               </button>
               <button type="button" disabled={!peer} onClick={() => peer && onAddBf(peer)}>
                 BF+

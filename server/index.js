@@ -125,6 +125,12 @@ async function handle(ws, msg) {
     case "report":
       if (!session) return needSignOn(ws);
       return report(ws, session, msg.screenName, msg.reason);
+    case "get_profile":
+      if (!session) return needSignOn(ws);
+      return getProfile(ws, msg.screenName || session.screenName);
+    case "set_profile":
+      if (!session) return needSignOn(ws);
+      return setProfile(ws, session, msg.bio);
     default:
       send(ws, { type: "error", code: "UNKNOWN", message: "Unknown request." });
   }
@@ -178,6 +184,7 @@ async function createAccount(ws, msg) {
     createdAt: Date.now(),
     bfList: [],
     mutes: [],
+    bio: "",
   });
   saveStore(db);
   attach(ws, name);
@@ -564,6 +571,32 @@ function report(ws, session, screenName, reason) {
   if (db.reports.length > 500) db.reports.splice(0, db.reports.length - 500);
   saveStore(db);
   send(ws, { type: "report_ok", target: name });
+}
+
+function getProfile(ws, screenName) {
+  const user = findUser(db, screenName);
+  if (!user) {
+    send(ws, { type: "error", code: "NO_USER", message: "No screen name by that spelling." });
+    return;
+  }
+  const live = findByName(user.screenName);
+  const liveSession = live ? sessions.get(live) : null;
+  send(ws, {
+    type: "profile",
+    screenName: user.screenName,
+    bio: user.bio || "",
+    away: Boolean(liveSession?.away),
+    awayMessage: liveSession?.awayMessage || "",
+    signedOn: Boolean(liveSession),
+  });
+}
+
+function setProfile(ws, session, bio) {
+  const user = findUser(db, session.screenName);
+  if (!user) return;
+  user.bio = cleanText(bio).slice(0, 200);
+  saveStore(db);
+  getProfile(ws, session.screenName);
 }
 
 function disconnect(ws) {

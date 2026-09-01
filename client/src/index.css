@@ -652,3 +652,21 @@ textarea {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+.profile-bio {
+  width: 100%;
+  resize: none;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  padding: 4px;
+  user-select: text;
+}
+
+.profile-read {
+  padding: 8px;
+  min-height: 90px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  user-select: text;
+  white-space: pre-wrap;
+}
