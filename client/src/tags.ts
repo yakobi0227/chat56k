@@ -7,4 +7,5 @@ export const TAGS = [
   "Where anybody could be anybody and everyone just went with it.",
   "I'm counting on someone to create a Buffy the Vampire Slayer RP room.",
   "When internet was mailed to you on a CD.",
+  "If you remember the sound of a 56k modem, this was made for you.",
 ];
